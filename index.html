@@ -40,27 +40,14 @@
               <p class="slide-kicker">01</p>
               <h2>Total Posts</h2>
               <div class="stat-box">
-                <span class="stat-number">42</span>
+                <span class="stat-number" data-total-posts>0</span>
                 <span class="stat-label">posts published</span>
               </div>
             </section>
             <section class="slide">
               <p class="slide-kicker">02</p>
               <h2>Recent Posts</h2>
-              <ul class="recent-post-list">
-                <li>
-                  <a href="#">새로운 프로젝트 시작하기</a>
-                  <span class="date">2026.05.20</span>
-                </li>
-                <li>
-                  <a href="#">파도 애니메이션 구현기</a>
-                  <span class="date">2026.05.18</span>
-                </li>
-                <li>
-                  <a href="#">프론트엔드 최적화 팁</a>
-                  <span class="date">2026.05.15</span>
-                </li>
-              </ul>
+              <ul class="recent-post-list" data-recent-posts></ul>
             </section>
             <section class="slide">
               <p class="slide-kicker">03</p>
@@ -89,14 +76,53 @@
         <canvas id="wave-canvas"></canvas>
       </div>
 
-      <!-- Bottom panel (Sand beach) -->
+      <!-- Bottom panel (Sand beach / Post Section) -->
       <div id="post-section" class="bottom-panel">
-        <h2 class="sand-title">POSTS</h2>
-        <p class="sand-desc">아직 작성된 포스트가 없습니다.</p>
+        <div class="post-container">
+          <!-- Left Sidebar: Categories -->
+          <aside class="post-sidebar left-sidebar">
+            <div class="widget category-widget glass-panel">
+              <button class="category-toggle" type="button" aria-expanded="true" aria-controls="category-list">
+                <span>카테고리</span>
+                <span class="category-toggle-icon" aria-hidden="true"></span>
+              </button>
+              <ul id="category-list" class="category-list"></ul>
+            </div>
+          </aside>
+
+          <!-- Center: Main Posts -->
+          <section class="post-main">
+            <div class="post-header">
+              <h2 data-post-heading>전체 글</h2>
+            </div>
+            <form class="post-search" role="search">
+              <input class="post-search-input" type="search" placeholder="Search posts" aria-label="Search posts">
+              <button class="post-search-button" type="submit">Search</button>
+            </form>
+            <div class="post-sort" aria-label="글 정렬">
+              <button class="post-sort-button is-active" type="button" data-sort-mode="recent">최신순</button>
+              <button class="post-sort-button" type="button" data-sort-mode="views">조회순</button>
+            </div>
+            <div class="post-list" id="post-list"></div>
+            <article class="post-article glass-panel" id="post-article" hidden></article>
+          </section>
+
+          <!-- Right Sidebar: Widgets -->
+          <aside class="post-sidebar right-sidebar">
+            <div class="widget glass-panel">
+              <h3>About Me</h3>
+            </div>
+            <div class="widget glass-panel">
+              <h3>태그</h3>
+              <div class="tag-cloud" id="tag-cloud"></div>
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
   </main>
 
+  <script src="posts-manifest.js"></script>
   <script>
     const slider = document.querySelector("[data-slider]");
 
@@ -107,6 +133,8 @@
       let currentSlide = 0;
 
       slider.style.cursor = "pointer";
+      slider.addEventListener("selectstart", (e) => e.preventDefault());
+      slider.addEventListener("dragstart", (e) => e.preventDefault());
       slider.addEventListener("click", (e) => {
         // 링크나 점(dot)을 클릭한 경우에는 무시
         if (e.target.closest(".slide-dot") || e.target.closest("a")) return;
@@ -128,6 +156,435 @@
 
       dots.forEach((dot) => {
         dot.addEventListener("click", () => showSlide(Number(dot.dataset.slideDot)));
+      });
+    }
+
+    const blogPosts = Array.isArray(window.BLOG_POSTS) ? window.BLOG_POSTS : [];
+    const postList = document.querySelector("#post-list");
+    const categoryList = document.querySelector("#category-list");
+    const tagCloud = document.querySelector("#tag-cloud");
+    const postSearch = document.querySelector(".post-search");
+    const postSearchInput = document.querySelector(".post-search-input");
+    const postSortButtons = [...document.querySelectorAll("[data-sort-mode]")];
+    const postArticle = document.querySelector("#post-article");
+    const postHeading = document.querySelector("[data-post-heading]");
+    let activeCategory = "all";
+    let sortMode = "recent";
+
+    function escapeHtml(value = "") {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function normalizePostText(post) {
+      return [
+        post.display,
+        post.description,
+        post.recent,
+        post.views,
+        post.category,
+        ...(post.tags || [])
+      ].join(" ").toLowerCase();
+    }
+
+    function sortPosts(posts) {
+      return [...posts].sort((a, b) => {
+        if (sortMode === "views") {
+          return Number(b.views || 0) - Number(a.views || 0);
+        }
+
+        return String(b.recent || "").localeCompare(String(a.recent || ""));
+      });
+    }
+
+    function encodePathSegments(path) {
+      return path.split("/").map((segment) => encodeURIComponent(segment)).join("/");
+    }
+
+    async function loadPostMarkdown(post) {
+      const urls = [...new Set([
+        post.path,
+        encodeURI(post.path),
+        encodePathSegments(post.path)
+      ])];
+
+      for (const url of urls) {
+        try {
+          const response = await fetch(url, { cache: "no-cache" });
+
+          if (response.ok) {
+            return await response.text();
+          }
+        } catch (error) {
+          // Try the next path variant.
+        }
+      }
+
+      throw new Error("Post markdown request failed.");
+    }
+
+    function getPostNeighbors(post) {
+      const orderedPosts = sortPosts(blogPosts);
+      const currentIndex = orderedPosts.findIndex((item) => item.path === post.path);
+
+      return {
+        prev: currentIndex > 0 ? orderedPosts[currentIndex - 1] : null,
+        next: currentIndex >= 0 && currentIndex < orderedPosts.length - 1 ? orderedPosts[currentIndex + 1] : null
+      };
+    }
+
+    function renderPostNav(post, className = "") {
+      const { prev, next } = getPostNeighbors(post);
+
+      return `
+        <nav class="post-detail-nav ${className}" aria-label="글 이동">
+          <button class="post-nav-button" type="button" data-post-nav="${prev ? escapeHtml(prev.path) : ""}" ${prev ? "" : "disabled"}>
+            <span class="post-nav-label">이전글</span>
+            <span class="post-nav-title">${prev ? escapeHtml(prev.display) : "이전 글 없음"}</span>
+          </button>
+          <button class="post-nav-button" type="button" data-post-nav="${next ? escapeHtml(next.path) : ""}" ${next ? "" : "disabled"}>
+            <span class="post-nav-label">다음글</span>
+            <span class="post-nav-title">${next ? escapeHtml(next.display) : "다음 글 없음"}</span>
+          </button>
+        </nav>
+      `;
+    }
+
+    function bindPostNav(container) {
+      container.querySelectorAll("[data-post-nav]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const post = blogPosts.find((item) => item.path === button.dataset.postNav);
+
+          if (post) {
+            openPost(post);
+          }
+        });
+      });
+    }
+
+    function getRecentPosts(limit = 3) {
+      return [...blogPosts]
+        .sort((a, b) => String(b.recent || "").localeCompare(String(a.recent || "")))
+        .slice(0, limit);
+    }
+
+    function renderTubePostSummary() {
+      const totalPosts = document.querySelector("[data-total-posts]");
+      const recentPosts = document.querySelector("[data-recent-posts]");
+
+      if (totalPosts) {
+        totalPosts.textContent = String(blogPosts.length);
+      }
+
+      if (recentPosts) {
+        recentPosts.innerHTML = getRecentPosts(3).map((post) => `
+          <li>
+            <a href="${escapeHtml(post.path)}">${escapeHtml(post.display)}</a>
+            <span class="date">${escapeHtml(post.recent || "-")}</span>
+          </li>
+        `).join("");
+      }
+    }
+
+    function renderCategories() {
+      if (!categoryList) return;
+
+      const root = { children: new Map(), count: blogPosts.length, path: "" };
+
+      blogPosts.forEach((post) => {
+        const parts = post.category.split("/").map((part) => part.trim()).filter(Boolean);
+        let node = root;
+        let currentPath = "";
+
+        parts.forEach((part) => {
+          currentPath = currentPath ? `${currentPath} / ${part}` : part;
+
+          if (!node.children.has(part)) {
+            node.children.set(part, { children: new Map(), count: 0, path: currentPath });
+          }
+
+          node = node.children.get(part);
+          node.count += 1;
+        });
+      });
+
+      function renderCategoryNodes(nodes) {
+        return [...nodes.entries()].map(([label, node]) => {
+          const isActive = node.path === activeCategory;
+          const hasChildren = node.children.size > 0;
+          const button = `
+            <button type="button" class="category-button" data-category="${escapeHtml(node.path)}">
+              ${escapeHtml(label)} <span>(${node.count})</span>
+            </button>
+          `;
+
+          if (!hasChildren) {
+            return `<li class="${isActive ? "is-active" : ""}">${button}</li>`;
+          }
+
+          return `
+            <li class="category-folder ${isActive ? "is-active" : ""}">
+              <details open>
+                <summary>
+                  <span class="category-folder-caret" aria-hidden="true"></span>
+                  ${button}
+                </summary>
+                <ul class="category-sublist">
+                  ${renderCategoryNodes(node.children)}
+                </ul>
+              </details>
+            </li>
+          `;
+        }).join("");
+      }
+
+      categoryList.innerHTML = `
+        <li class="${activeCategory === "all" ? "is-active" : ""}">
+          <button type="button" class="category-button" data-category="all">
+            전체보기 <span>(${blogPosts.length})</span>
+          </button>
+        </li>
+        ${renderCategoryNodes(root.children)}
+      `;
+
+      categoryList.querySelectorAll("[data-category]").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          activeCategory = button.dataset.category;
+          renderCategories();
+          renderPosts();
+        });
+      });
+    }
+
+    function renderTags() {
+      if (!tagCloud) return;
+
+      const tags = [...new Set(blogPosts.flatMap((post) => post.tags || []))]
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b));
+
+      tagCloud.innerHTML = tags.length
+        ? tags.map((tag) => `<span class="tag">#${escapeHtml(tag)}</span>`).join("")
+        : '<span class="tag">#untagged</span>';
+    }
+
+    function renderPosts() {
+      if (!postList) return;
+
+      const query = postSearchInput ? postSearchInput.value.trim().toLowerCase() : "";
+      const filteredPosts = sortPosts(blogPosts
+        .filter((post) => (
+          activeCategory === "all" ||
+          post.category === activeCategory ||
+          post.category.startsWith(`${activeCategory} / `)
+        ))
+        .filter((post) => !query || normalizePostText(post).includes(query)));
+
+      postList.innerHTML = filteredPosts.map((post) => {
+        const tags = (post.tags || []).map((tag) => `<span class="post-tag">#${escapeHtml(tag)}</span>`).join("");
+        const image = post.image
+          ? `<img class="post-preview-image" src="${escapeHtml(post.image)}" alt="" loading="lazy">`
+          : `<div class="post-preview-image post-preview-fallback" aria-hidden="true">${escapeHtml(post.category.slice(0, 1) || "P")}</div>`;
+
+        return `
+          <article class="post-card glass-panel">
+            <a class="post-card-link" href="${escapeHtml(post.path)}" data-post-path="${escapeHtml(post.path)}">
+              <div class="post-preview">${image}</div>
+              <div class="post-card-content">
+                <span class="post-category-label">${escapeHtml(post.category)}</span>
+                <h3>${escapeHtml(post.display)}</h3>
+                <p class="post-snippet">${escapeHtml(post.description || "설명이 아직 없습니다.")}</p>
+                <div class="post-info-row">
+                  <div class="post-meta">
+                    <span class="post-date">${escapeHtml(post.recent || "-")}</span>
+                    <span class="post-views">${Number(post.views || 0)} views</span>
+                  </div>
+                  <div class="post-tags">${tags || '<span class="post-tag">#untagged</span>'}</div>
+                </div>
+              </div>
+            </a>
+          </article>
+        `;
+      }).join("");
+
+      postList.querySelectorAll("[data-post-path]").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          const post = blogPosts.find((item) => item.path === link.dataset.postPath);
+
+          if (!post) return;
+
+          event.preventDefault();
+          openPost(post);
+        });
+      });
+    }
+
+    function getPostAssetPath(post, filename) {
+      const postName = post.path.split("/").pop().replace(/\.md$/i, "");
+      return `posts/_assets/${postName}/${filename}`;
+    }
+
+    function renderMarkdown(markdown, post) {
+      const body = markdown.replace(/^---[\s\S]*?---\s*/, "");
+      const lines = body.split(/\r?\n/);
+      let html = "";
+      let inList = false;
+
+      function closeList() {
+        if (inList) {
+          html += "</ul>";
+          inList = false;
+        }
+      }
+
+      lines.forEach((line) => {
+        const trimmed = line.trim();
+        const image = trimmed.match(/^!\[\[([^\]|]+)(?:\|[^\]]*)?\]\]$/);
+        const heading = trimmed.match(/^(#{1,3})\s+(.+)$/);
+        const listItem = trimmed.match(/^[-*]\s+(.+)$/);
+        const quote = trimmed.match(/^>\s*(.+)$/);
+
+        if (!trimmed) {
+          closeList();
+          return;
+        }
+
+        if (image) {
+          closeList();
+          html += `<img class="markdown-image" src="${escapeHtml(getPostAssetPath(post, image[1]))}" alt="">`;
+          return;
+        }
+
+        if (heading) {
+          closeList();
+          const level = Math.min(heading[1].length + 1, 4);
+          html += `<h${level}>${escapeHtml(heading[2])}</h${level}>`;
+          return;
+        }
+
+        if (listItem) {
+          if (!inList) {
+            html += "<ul>";
+            inList = true;
+          }
+          html += `<li>${escapeHtml(listItem[1])}</li>`;
+          return;
+        }
+
+        if (quote) {
+          closeList();
+          html += `<blockquote>${escapeHtml(quote[1])}</blockquote>`;
+          return;
+        }
+
+        closeList();
+        html += `<p>${escapeHtml(trimmed)}</p>`;
+      });
+
+      closeList();
+      return html;
+    }
+
+    async function openPost(post) {
+      if (!postArticle || !postList) return;
+
+      const tags = (post.tags || []).map((tag) => `<span class="post-tag">#${escapeHtml(tag)}</span>`).join("");
+
+      postArticle.hidden = false;
+      postList.hidden = true;
+      if (postHeading) postHeading.textContent = post.display;
+      if (postSearch) postSearch.hidden = true;
+      document.querySelector(".post-sort")?.setAttribute("hidden", "");
+
+      postArticle.innerHTML = `
+        <div class="post-detail-toolbar">
+          <button class="post-back-button" type="button">목록</button>
+          ${renderPostNav(post, "post-detail-nav-top")}
+        </div>
+        <header class="post-article-header">
+          <span class="post-category-label">${escapeHtml(post.category)}</span>
+          <p>${escapeHtml(post.description || "")}</p>
+          <div class="post-info-row">
+            <div class="post-meta">
+              <span>recent ${escapeHtml(post.recent || "-")}</span>
+              <span>${Number(post.views || 0)} views</span>
+            </div>
+            <div class="post-tags">${tags || '<span class="post-tag">#untagged</span>'}</div>
+          </div>
+        </header>
+        <div class="post-article-body">불러오는 중...</div>
+        ${renderPostNav(post, "post-detail-nav-bottom")}
+      `;
+
+      postArticle.querySelector(".post-back-button").addEventListener("click", closePost);
+      bindPostNav(postArticle);
+
+      try {
+        const markdown = await loadPostMarkdown(post);
+        postArticle.querySelector(".post-article-body").innerHTML = renderMarkdown(markdown, post);
+      } catch (error) {
+        postArticle.querySelector(".post-article-body").innerHTML = `
+          <p>글을 불러오지 못했습니다. 로컬 파일로 직접 열었다면 브라우저 보안 때문에 md 파일 요청이 막힐 수 있습니다.</p>
+          <p><a href="${escapeHtml(post.path)}">md 파일 직접 열기</a></p>
+        `;
+      }
+
+      postArticle.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function closePost() {
+      if (!postArticle || !postList) return;
+
+      postArticle.hidden = true;
+      postList.hidden = false;
+      if (postHeading) postHeading.textContent = "전체 글";
+      if (postSearch) postSearch.hidden = false;
+      document.querySelector(".post-sort")?.removeAttribute("hidden");
+    }
+
+    renderTubePostSummary();
+    renderCategories();
+    renderTags();
+    renderPosts();
+
+    const categoryWidget = document.querySelector(".category-widget");
+    const categoryToggle = document.querySelector(".category-toggle");
+
+    if (categoryWidget && categoryToggle && categoryList) {
+      categoryToggle.addEventListener("click", () => {
+        const isCollapsed = categoryWidget.classList.toggle("is-collapsed");
+        categoryToggle.setAttribute("aria-expanded", String(!isCollapsed));
+      });
+    }
+
+    if (postSearch && postSearchInput) {
+      postSearch.addEventListener("submit", (e) => e.preventDefault());
+      postSearchInput.addEventListener("input", renderPosts);
+    }
+
+    postSortButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        sortMode = button.dataset.sortMode;
+        postSortButtons.forEach((item) => {
+          item.classList.toggle("is-active", item === button);
+        });
+        renderPosts();
+      });
+    });
+
+    const homeLink = document.querySelector('a[href="index.html"]');
+
+    if (homeLink) {
+      homeLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
       });
     }
 
@@ -455,6 +912,7 @@
       window.addEventListener('resize', () => { resize(); spawn(); });
       requestAnimationFrame(loop);
     })();
+
   </script>
 </body>
 </html>

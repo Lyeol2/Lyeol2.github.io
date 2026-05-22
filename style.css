@@ -6,7 +6,7 @@
   --nav-height: 72px;
   --frame-size: 440px; /* 튜브(프레임) 사이즈 대폭 증가 */
   --wave-height: 100px;
-  --bottom-panel-height: 160px; /* 메인 화면 하단에 모래사장이 160px 만큼 보이도록 설정 */
+  --bottom-panel-height: 130px; /* 메인 화면 하단에 모래사장이 130px 만큼 보이도록 설정 */
 }
 
 /* Base */
@@ -33,7 +33,17 @@ html::-webkit-scrollbar {
 body {
   overflow-x: hidden;
   -ms-overflow-style: none;
-  background: var(--blue);
+  background: var(--sand);
+}
+
+::selection {
+  background: #FE707E;
+  color: var(--white);
+}
+
+::-moz-selection {
+  background: #FE707E;
+  color: var(--white);
 }
 
 /* Utilities */
@@ -84,7 +94,7 @@ body {
   width: 100%; /* 100vw로 하면 스크롤바 두께때문에 오른쪽으로 쏠리는 현상 발생 -> 100%로 수정 */
   min-height: 100vh;
   min-height: 100dvh; /* 모바일 브라우저 주소창 높이 대응 */
-  background: var(--blue);
+  background: var(--sand);
   display: flex; /* Safari의 min-height flex 버그 방지 */
   flex-direction: column;
 }
@@ -94,6 +104,7 @@ body {
   width: 100%;
   min-height: 100vh;
   min-height: 100dvh; /* 모바일 브라우저 주소창 높이 대응 */
+  background: var(--blue);
 }
 
 /* Navigation */
@@ -107,10 +118,29 @@ body {
   align-items: center;
   justify-content: space-between; /* 양쪽 끝으로 자동 분산 정렬 */
   padding: 0 60px; /* 좌우 여백 설정 */
-  /* 투명 배경 유지하면서 아래가 살짝 비치는 반투명 블러(Glassmorphism) 효과 추가 */
-  background: rgba(0, 133, 251, 0.2); 
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: transparent;
+}
+
+/* 칼로 자른 듯한 경계를 없애고 부드럽게 스며들듯 사라지는 그라데이션 페이드 + 블러 효과 */
+.navigate::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100% + 20px); /* 네비게이션 영역 아래로 침범하는 길이를 50px에서 20px로 대폭 줄임 */
+  
+  /* 블러(유리) 효과 및 반투명 파란색 배경 */
+  background: transparent;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  
+  /* 위쪽은 온전하게 보여주고, 아래쪽 70% 구간부터 급격히 투명해지도록 마스크 처리 (침범 최소화) */
+  mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  
+  z-index: -1;
+  pointer-events: none;
 }
 
 .icon-panel {
@@ -156,7 +186,8 @@ body {
 /* Main panel */
 .main-panel {
   position: relative;
-  z-index: 2;
+  z-index: 3; /* 파도 섹션(z-index: 2)보다 높게 설정하여 튜브 그림자와 물결이 아래로 자연스럽게 겹치도록 수정 */
+  background: transparent;
   flex: 1 1 calc(100vh - var(--nav-height) - var(--wave-height) - var(--bottom-panel-height));
   flex: 1 1 calc(100dvh - var(--nav-height) - var(--wave-height) - var(--bottom-panel-height)); /* 모바일 호환성 (dvh) */
   width: 100%;
@@ -273,6 +304,17 @@ body {
   backdrop-filter: blur(4px); /* 블러 강도 약하게 수정 */
   -webkit-backdrop-filter: blur(4px); /* iOS Safari 렌더링 깨짐 방지 */
   animation: floatTube 7s ease-in-out infinite;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  touch-action: manipulation;
+}
+
+.frame *,
+.tube-ripples {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
 }
 
 /* 튜브 링을 글자 위(앞)에 덮도록 가상 요소 사용 */
@@ -522,7 +564,7 @@ body {
 .bottom-panel {
   position: relative;
   z-index: 2;
-  scroll-margin-top: calc(var(--nav-height) + 50px); /* post 탭 이동 시, 네비게이션 높이 + 파도 높이 50px만큼 덜 내려가서 해변이 살짝 보이게 설정 */
+  scroll-margin-top: calc(var(--nav-height) + 70px); /* post 탭 이동 시, 네비게이션 높이 + 파도 높이 70px만큼 덜 내려가서 해변이 살짝 보이게 설정 */
   overflow: hidden;
   min-height: 100vh; /* 화면 전체를 덮는 새로운 섹션으로 확장 */
   background: var(--sand);
@@ -533,18 +575,357 @@ body {
   text-align: center; /* 추가: 내부 텍스트 완벽한 중앙 정렬 */
 }
 
-.sand-title {
-  font-size: 48px;
-  color: #B37A20; /* 모래색 대비 진한 갈색 */
-  margin: 0 0 16px;
-  font-weight: 900;
-  letter-spacing: 2px;
+/* Post Container (3-Column Grid) */
+.post-container {
+  display: grid;
+  grid-template-columns: 240px 1fr 240px; /* 좌 240px, 중앙 가변, 우 240px */
+  gap: 32px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  align-items: start; /* 콘텐츠 높이에 맞게 위로 정렬 */
+  padding: 40px 20px;
 }
 
-.sand-desc {
+/* Glassmorphism Panel */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.4); /* 반투명 흰색 */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05); /* 부드러운 그림자 */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-align: left;
+}
+
+.post-card.glass-panel:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Sidebar Widgets */
+.post-sidebar .widget {
+  margin-bottom: 24px;
+}
+
+.post-sidebar h3 {
+  margin: 0 0 16px 0;
   font-size: 18px;
-  color: #C28E3A;
+  font-weight: 800;
+  color: #8c5b16; /* 모래색에 어울리는 짙은 갈색 */
+  border-bottom: 2px solid rgba(140, 91, 22, 0.2);
+  padding-bottom: 8px;
+}
+
+/* Category List */
+.category-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.category-list li {
+  margin-bottom: 12px;
+}
+
+.category-list a {
+  text-decoration: none;
+  color: #5a3c10;
+  font-weight: 600;
+  font-size: 15px;
+  transition: color 0.2s ease;
+}
+
+.category-list a:hover {
+  color: #d16b15;
+}
+
+.category-list .is-active a {
+  color: #FE707E; /* 튜브 색상(포인트 컬러) */
+  font-weight: 800;
+}
+
+/* Slide 03: Social Links */
+.social-links {
+  margin-top: 18px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap; /* 혹시 넘치면 줄바꿈 */
+}
+
+.social-link {
+  display: inline-block;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--white);
+  text-decoration: none;
+  border-radius: 20px; /* 버튼도 알약 모양으로 변경 */
+  font-weight: 700;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.social-link:hover {
+  background: var(--white);
+  color: var(--blue);
+  transform: translateY(-2px);
+}
+
+.slide-controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 40px; /* 도넛 링을 살짝 걸치거나 안쪽에 위치하도록 위로 올림 */
+  display: flex;
+  align-items: center;
+  justify-content: center; /* 화살표 없이 중앙 정렬 */
+  pointer-events: none;
+}
+
+.slide-button,
+.slide-dot {
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.slide-button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: var(--white);
+  background: var(--blue);
+  font-size: 26px;
+  line-height: 1;
+}
+
+.slide-button:hover {
+  background: #006ed4;
+}
+
+.slide-dots {
+  display: flex;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.slide-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.slide-dot.is-active {
+  width: 22px;
+  border-radius: 999px;
+  background: var(--white);
+}
+
+/* Wave section */
+.wave-section {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 var(--wave-height);
+  width: 100%;
+  height: var(--wave-height);
+  overflow: hidden;
+}
+
+#wave-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Fish (Boids) overlay */
+#fish-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Bottom panel (모래사장 포스트 영역) */
+.bottom-panel {
+  position: relative;
+  z-index: 2;
+  scroll-margin-top: calc(var(--nav-height) + 70px); /* post 탭 이동 시, 네비게이션 높이 + 파도 높이 70px만큼 덜 내려가서 해변이 살짝 보이게 설정 */
+  overflow: hidden;
+  min-height: 100vh; /* 화면 전체를 덮는 새로운 섹션으로 확장 */
+  background: var(--sand);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center; /* 추가: 내부 텍스트 완벽한 중앙 정렬 */
+}
+
+/* Post Container (3-Column Grid) */
+.post-container {
+  display: grid;
+  grid-template-columns: 240px 1fr 240px; /* 좌 240px, 중앙 가변, 우 240px */
+  gap: 32px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  align-items: start; /* 콘텐츠 높이에 맞게 위로 정렬 */
+  padding: 40px 20px;
+}
+
+/* Glassmorphism Panel */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.4); /* 반투명 흰색 */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05); /* 부드러운 그림자 */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-align: left;
+}
+
+.post-card.glass-panel:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Sidebar Widgets */
+.post-sidebar .widget {
+  margin-bottom: 24px;
+}
+
+.post-sidebar h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #8c5b16; /* 모래색에 어울리는 짙은 갈색 */
+  border-bottom: 2px solid rgba(140, 91, 22, 0.2);
+  padding-bottom: 8px;
+}
+
+/* Category List */
+.category-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.category-list li {
+  margin-bottom: 12px;
+}
+
+.category-list a {
+  text-decoration: none;
+  color: #5a3c10;
+  font-weight: 600;
+  font-size: 15px;
+  transition: color 0.2s ease;
+}
+
+.category-list a:hover {
+  color: #d16b15;
+}
+
+.category-list .is-active a {
+  color: #FE707E; /* 튜브 색상(포인트 컬러) */
+  font-weight: 800;
+}
+
+/* Main Posts Section */
+.post-header h2 {
+  font-size: 32px;
+  font-weight: 900;
+  color: #8c5b16;
+  margin: 0 0 24px 0;
+  text-align: left;
+}
+
+.post-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.post-list[hidden],
+.post-search[hidden],
+.post-sort[hidden],
+.post-article[hidden] {
+  display: none !important;
+}
+
+.post-card-content h3 {
+  margin: 8px 0;
+  font-size: 19px;
+  font-weight: 800;
+  color: #333;
+}
+
+.post-snippet {
+  color: #555;
+  font-size: 14px;
+  line-height: 1.45;
+  margin: 0 0 10px 0;
+}
+
+.post-category-label {
+  display: inline-block;
+  padding: 3px 9px;
+  background: #FE707E;
+  color: white;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.post-meta {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  font-size: 12px;
+  color: #888;
   font-weight: 500;
+}
+
+.post-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* Tag Cloud */
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  background: rgba(255, 255, 255, 0.6);
+  color: #8c5b16;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.tag:hover {
+  background: #FE707E;
+  color: white;
 }
 
 /* --- Responsive Layout --- */
@@ -570,12 +951,28 @@ body {
     white-space: nowrap; /* 글씨가 어정쩡하게 두 줄로 내려가는 것 방지 */
     margin: 0 auto; /* 블록 요소 자체도 중앙 정렬 */
   }
+
+  .post-container {
+    grid-template-columns: 220px 1fr; /* 2분할로 변경 (카테고리, 메인글) */
+  }
+
+  .right-sidebar {
+    grid-column: 1 / -1; /* 전체 너비 사용 */
+    display: flex;
+    gap: 24px;
+  }
+
+  .right-sidebar .widget {
+    flex: 1;
+    margin-bottom: 0;
+  }
 }
 
 @media (max-width: 768px) {
   .main-panel {
     gap: 40px !important; /* 모바일 화면에서는 글자와 튜브 사이 간격을 크게 줄임 */
-    padding: 20px 0 !important; /* 위아래 여백을 대폭 줄여 전체 콘텐츠 높이가 100vh를 넘지 않게 해 모래사장이 자연스럽게 이어지도록 유도 */
+    /* 위쪽 여백은 90px, 아래쪽 여백은 튜브/물결이 파도에 잘리지 않도록 120px 확보 */
+    padding: 90px 0 120px 0 !important; 
   }
 
   /* 모바일 화면에 맞춰 크기 자동 조절 */
@@ -604,46 +1001,527 @@ body {
     justify-content: center;
   }
   
-  .main-panel {
-    padding-top: 140px !important; /* 모바일에서 네비게이션과 타이틀 사이의 간격을 훨씬 넓힘 */
+  .bottom-panel {
+    scroll-margin-top: 180px !important; /* 모바일은 네비게이션이 두 줄이라 더 높으므로, 여백을 크게 줘서 파도가 확실히 보이게 처리 */
   }
 
   .nav-link {
     font-size: 14px;
   }
+  
   .brand-text {
     font-size: 18px;
   }
 
-  /* 튜브 크기 축소 시 안쪽 내용물이 도넛 링과 겹치거나 삐져나오지 않도록 비율에 맞춰 내부 폰트/여백 줄임 */
+  /* 튜브 크기 축소 시 안쪽 내용물이 도넛 링과 겹치거나 삐져나오지 않도록 비율에 맞춰 내부 폰트/여백 대폭 줄임 */
   .slide {
-    padding: 30px 20px !important; /* 내부 여백 축소 */
+    padding: 20px 10px !important; /* 내부 여백 축소 */
   }
   .slide h2 {
-    font-size: 22px !important;
+    font-size: 18px !important; /* 타이틀 크기 축소 */
   }
   .stat-number {
-    font-size: 36px !important;
+    font-size: 28px !important; /* 숫자 크기 축소 */
   }
   .slide-desc {
-    font-size: 13px !important;
-    margin-top: 8px !important;
+    font-size: 11px !important;
+    margin-top: 6px !important;
   }
   .recent-post-list {
-    gap: 10px !important;
+    gap: 8px !important;
   }
   .recent-post-list li {
-    font-size: 12px !important;
+    font-size: 11px !important;
   }
   .slide-controls {
-    bottom: 24px !important; /* 하단 인디케이터 위치 위로 올림 */
+    bottom: 16px !important; /* 하단 인디케이터 위치 더 위로 올림 */
   }
   .social-links {
     flex-direction: column; /* 모바일엔 공간 부족하므로 세로 배치 */
     gap: 8px;
   }
+
+  .post-container {
+    grid-template-columns: 1fr; /* 모바일에서는 모든 것을 1열로 세로 배치 */
+  }
+
+  .right-sidebar {
+    flex-direction: column;
+  }
+
   .social-link {
     padding: 6px 12px !important;
     font-size: 12px !important;
+  }
+}
+
+/* Post section spacing */
+.bottom-panel {
+  scroll-margin-top: 150px;
+  justify-content: flex-start;
+  overflow: visible;
+  min-height: 100vh;
+  height: auto;
+  padding-bottom: 140px;
+  background: var(--sand);
+}
+
+.post-container {
+  position: relative;
+  z-index: 2;
+  padding: 120px 20px 0;
+}
+
+.post-sidebar {
+  margin-top: 64px;
+}
+
+.post-main {
+  min-width: 0;
+}
+
+.category-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 0 8px;
+  border: 0;
+  border-bottom: 2px solid rgba(140, 91, 22, 0.2);
+  background: transparent;
+  color: #8c5b16;
+  cursor: pointer;
+  font: inherit;
+  font-size: 18px;
+  font-weight: 800;
+  text-align: left;
+}
+
+.category-toggle-icon {
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 0.2s ease;
+}
+
+.category-widget.is-collapsed .category-toggle-icon {
+  transform: rotate(-45deg);
+}
+
+.category-list {
+  max-height: 520px;
+  margin-top: 18px;
+  overflow: hidden;
+  transition: max-height 0.24s ease, margin-top 0.24s ease, opacity 0.2s ease;
+}
+
+.category-widget.is-collapsed .category-list {
+  max-height: 0;
+  margin-top: 0;
+  opacity: 0;
+}
+
+.category-button {
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #5a3c10;
+  cursor: pointer;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.category-button:hover,
+.category-button:focus-visible {
+  color: #FE707E;
+  transform: translateX(2px);
+}
+
+.category-folder details {
+  margin-top: 0;
+}
+
+.category-folder summary {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  align-items: center;
+  gap: 6px;
+  list-style: none;
+  cursor: pointer;
+}
+
+.category-folder summary::-webkit-details-marker {
+  display: none;
+}
+
+.category-folder-caret {
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #8c5b16;
+  border-bottom: 2px solid #8c5b16;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 0.2s ease;
+}
+
+.category-folder details:not([open]) .category-folder-caret {
+  transform: rotate(-45deg);
+}
+
+.category-sublist {
+  list-style: none;
+  margin: 10px 0 0 20px;
+  padding: 0;
+}
+
+.post-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: -6px 0 12px;
+}
+
+.post-search-input {
+  min-width: 0;
+  flex: 1;
+  height: 44px;
+  border: 1px solid rgba(140, 91, 22, 0.28);
+  border-radius: 999px;
+  padding: 0 18px;
+  background: rgba(255, 255, 255, 0.62);
+  color: #333333;
+  font: inherit;
+  outline: none;
+}
+
+.post-search-input:focus {
+  border-color: #FE707E;
+  box-shadow: 0 0 0 3px rgba(254, 112, 126, 0.24);
+}
+
+.post-search-button {
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 18px;
+  background: #FE707E;
+  color: var(--white);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+
+.post-sort {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0 0 24px;
+}
+
+.post-sort-button,
+.post-back-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 9px 14px;
+  background: rgba(255, 255, 255, 0.58);
+  color: #8c5b16;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.post-sort-button:hover,
+.post-sort-button:focus-visible,
+.post-sort-button.is-active,
+.post-back-button:hover,
+.post-back-button:focus-visible {
+  background: #FE707E;
+  color: var(--white);
+  transform: translateY(-1px);
+}
+
+.post-card.is-hidden {
+  display: none;
+}
+
+.post-card {
+  overflow: hidden;
+  padding: 0;
+}
+
+.post-card-link {
+  display: grid;
+  grid-template-columns: minmax(132px, 36%) minmax(0, 1fr);
+  min-height: 142px;
+  align-items: stretch;
+  color: inherit;
+  text-decoration: none;
+}
+
+.post-preview {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: rgba(0, 133, 251, 0.12);
+}
+
+.post-preview-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: cover;
+}
+
+.post-card-content {
+  min-width: 0;
+  padding: 16px;
+}
+
+.post-preview-fallback {
+  display: grid;
+  place-items: center;
+  background: var(--blue);
+  color: var(--white);
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: 0;
+}
+
+.post-tag {
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.62);
+  color: #8c5b16;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.post-article {
+  text-align: left;
+  padding: 26px;
+}
+
+.post-detail-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.post-detail-nav {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.post-detail-nav-bottom {
+  margin-top: 34px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(140, 91, 22, 0.22);
+}
+
+.post-nav-button {
+  border: 0;
+  border-radius: 12px;
+  padding: 9px 12px;
+  background: rgba(255, 255, 255, 0.58);
+  color: #8c5b16;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  display: grid;
+  gap: 3px;
+  min-width: 118px;
+  max-width: 180px;
+  text-align: left;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.post-nav-label {
+  font-size: 11px;
+  opacity: 0.72;
+}
+
+.post-nav-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post-nav-button:hover,
+.post-nav-button:focus-visible {
+  background: #FE707E;
+  color: var(--white);
+  transform: translateY(-1px);
+}
+
+.post-nav-button:disabled {
+  cursor: default;
+  opacity: 0.38;
+  transform: none;
+}
+
+.post-article-header {
+  display: grid;
+  gap: 10px;
+  margin-top: 0;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(140, 91, 22, 0.22);
+}
+
+.post-article-header p {
+  margin: 0;
+  color: #5a3c10;
+  line-height: 1.6;
+}
+
+.post-article-body {
+  margin-top: 28px;
+  color: #333333;
+  line-height: 1.8;
+}
+
+.post-article-body h2,
+.post-article-body h3,
+.post-article-body h4 {
+  margin: 32px 0 12px;
+  color: #333333;
+  line-height: 1.3;
+}
+
+.post-article-body p {
+  margin: 0 0 16px;
+}
+
+.post-article-body blockquote {
+  margin: 18px 0;
+  padding: 14px 18px;
+  border-left: 4px solid #FE707E;
+  background: rgba(255, 255, 255, 0.46);
+  color: #5a3c10;
+}
+
+.post-article-body ul {
+  margin: 0 0 18px 20px;
+  padding: 0;
+}
+
+.markdown-image {
+  display: block;
+  width: 100%;
+  max-height: 520px;
+  margin: 22px 0;
+  border-radius: 12px;
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.nav-link:hover,
+.nav-link:focus-visible,
+.recent-post-list a:hover,
+.recent-post-list a:focus-visible {
+  color: #FE707E;
+}
+
+.nav-link:focus-visible,
+.category-list a:focus-visible,
+.category-button:focus-visible,
+.post-card-link:focus-visible,
+.post-sort-button:focus-visible,
+.post-back-button:focus-visible,
+.post-nav-button:focus-visible,
+.tag:focus-visible,
+.slide-button:focus-visible,
+.slide-dot:focus-visible {
+  outline: 3px solid #FE707E;
+  outline-offset: 4px;
+}
+
+.category-list .is-active a {
+  color: var(--blue);
+}
+
+.category-list .is-active .category-button {
+  color: var(--blue);
+  font-weight: 800;
+}
+
+@media (max-width: 768px) {
+  .bottom-panel {
+    scroll-margin-top: 170px !important;
+  }
+
+  .post-container {
+    padding-top: 110px;
+  }
+
+  .post-sidebar {
+    margin-top: 0;
+  }
+
+  .post-search {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .post-card-link {
+    grid-template-columns: 96px minmax(0, 1fr);
+    min-height: 112px;
+  }
+
+  .post-preview {
+    width: 100%;
+    height: 100%;
+  }
+
+  .post-card-content {
+    padding: 14px;
+  }
+
+  .post-info-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .post-tags {
+    justify-content: flex-start;
+  }
+
+  .post-detail-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .post-detail-nav {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .post-nav-button {
+    flex: 1;
+    max-width: none;
+    min-width: 0;
   }
 }

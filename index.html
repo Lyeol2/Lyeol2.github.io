@@ -100,13 +100,13 @@
       });
     }
 
-    /* ── Wave Animation ── */
+    /* ── Wave Animation v2 — noise-enhanced ── */
     (function () {
       const canvas = document.getElementById('wave-canvas');
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
 
-      /* --- 리사이즈 (HiDPI 대응) --- */
+      /* ─── 리사이즈 (HiDPI) ─── */
       function resize() {
         const dpr = window.devicePixelRatio || 1;
         const rect = canvas.getBoundingClientRect();
@@ -117,73 +117,153 @@
       resize();
       window.addEventListener('resize', resize);
 
-      /* --- 파도 파라미터 --- */
-      const OCEAN  = '#0085FB';
-      const SAND   = '#FDBF5A';
-
-      // 여러 겹의 파도 레이어
-      const waves = [
-        { amp: 14, len: 320, spd: 0.4, phase: 0.0, fill: OCEAN },                      // 뒤쪽 큰 파도
-        { amp: 10, len: 220, spd: 0.6, phase: 1.8, fill: 'rgba(0,133,251,0.72)' },     // 중간 파도
-        { amp:  7, len: 160, spd: 0.9, phase: 3.6, fill: 'rgba(0,133,251,0.50)' },     // 앞쪽 작은 파도
-      ];
-
-      // 거품(foam) 레이어
-      const foam = { amp: 5, len: 190, spd: 0.55, phase: 1.0 };
-
-      // 상하 움직임 (bobbing)
-      const bob = { amp: 6, spd: 0.35 };
-
-      /* --- 파형 y좌표 계산 함수 --- */
-      function waveY(x, w, t, base) {
-        return base + w.amp * Math.sin((x / w.len) * Math.PI * 2 + t * w.spd * Math.PI * 2 + w.phase);
+      /* ─── 노이즈 유틸리티 ─── */
+      function hash(n) {
+        const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+        return x - Math.floor(x);
       }
 
-      /* --- 메인 드로우 루프 --- */
+      // 부드러운 1D value noise
+      function noise(x) {
+        const i = Math.floor(x);
+        const f = x - i;
+        const u = f * f * (3 - 2 * f); // smoothstep
+        return hash(i) * (1 - u) + hash(i + 1) * u;
+      }
+
+      // fBm (Fractal Brownian Motion) — 여러 옥타브의 노이즈 합성
+      function fbm(x, octaves) {
+        let val = 0, amp = 1, freq = 1, max = 0;
+        for (let i = 0; i < octaves; i++) {
+          val += amp * (noise(x * freq) - 0.5);
+          max += amp;
+          amp *= 0.5;
+          freq *= 2.0;
+        }
+        return val / max; // 대략 [-0.5, 0.5] 범위
+      }
+
+      /* ─── 색상 ─── */
+      const OCEAN_DEEP  = '#0070D8';
+      const OCEAN       = '#0085FB';
+      const OCEAN_LIGHT = '#3DA5FF';
+      const SAND        = '#FDBF5A';
+      const SAND_WET    = '#E5A94D';
+
+      /* ─── 파도 레이어 (뒤→앞) ─── */
+      const waves = [
+        { amp: 16, len: 340, spd: 0.35, phase: 0.0, nAmp: 6, nScale: 0.008, fill: OCEAN_DEEP },
+        { amp: 11, len: 240, spd: 0.50, phase: 1.6, nAmp: 5, nScale: 0.012, fill: OCEAN },
+        { amp:  8, len: 170, spd: 0.70, phase: 3.2, nAmp: 4, nScale: 0.015, fill: OCEAN_LIGHT },
+      ];
+
+      // 상하 움직임 (bobbing)
+      const bob = { amp: 5, spd: 0.3 };
+
+      /* ─── 파형 y좌표 — 사인파 + fBm 노이즈 ─── */
+      function waveY(x, wv, t, base) {
+        const sine = wv.amp * Math.sin((x / wv.len) * Math.PI * 2 + t * wv.spd * Math.PI * 2 + wv.phase);
+        const n    = wv.nAmp * fbm(x * wv.nScale + t * wv.spd * 0.5, 4);
+        return base + sine + n;
+      }
+
+      /* ─── 거품 방울 사전 생성 ─── */
+      const bubbles = [];
+      for (let i = 0; i < 100; i++) {
+        bubbles.push({
+          xr:  hash(i * 13 + 7),
+          yo:  (hash(i * 17 + 3) - 0.5) * 18,
+          r:   1 + hash(i * 23 + 11) * 2.5,
+          a:   0.25 + hash(i * 31 + 5) * 0.55,
+        });
+      }
+
+      /* ─── 메인 드로우 ─── */
       const t0 = performance.now();
 
       function draw(now) {
-        const t = (now - t0) / 1000;           // elapsed seconds
+        const t = (now - t0) / 1000;
         const w = canvas.getBoundingClientRect().width;
         const h = canvas.getBoundingClientRect().height;
 
-        // 상하 흔들림
-        const bobY = bob.amp * Math.sin(t * bob.spd * Math.PI * 2);
+        const bobY  = bob.amp * Math.sin(t * bob.spd * Math.PI * 2);
         const baseY = h * 0.42 + bobY;
+        const front = waves[waves.length - 1]; // 앞쪽 파도 기준선
 
         ctx.clearRect(0, 0, w, h);
 
-        // 1) 배경: 모래
+        /* 1) 배경 — 모래 */
         ctx.fillStyle = SAND;
         ctx.fillRect(0, 0, w, h);
 
-        // 2) 파도 레이어 (뒤→앞 순서)
-        for (const wave of waves) {
+        /* 2) 젖은 모래 그라디언트 — 거품 아래 */
+        ctx.beginPath();
+        for (let x = 0; x <= w; x += 2) {
+          const y = waveY(x, front, t, baseY) + 14;
+          if (x === 0) ctx.moveTo(x, y);
+          else         ctx.lineTo(x, y);
+        }
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        const wetG = ctx.createLinearGradient(0, baseY + 8, 0, baseY + 42);
+        wetG.addColorStop(0, SAND_WET);
+        wetG.addColorStop(1, SAND);
+        ctx.fillStyle = wetG;
+        ctx.fill();
+
+        /* 3) 파도 레이어 (뒤→앞) — 노이즈 포함 */
+        for (const wv of waves) {
           ctx.beginPath();
           ctx.moveTo(0, 0);
           for (let x = 0; x <= w; x += 2) {
-            ctx.lineTo(x, waveY(x, wave, t, baseY));
+            ctx.lineTo(x, waveY(x, wv, t, baseY));
           }
           ctx.lineTo(w, 0);
           ctx.closePath();
-          ctx.fillStyle = wave.fill;
+          ctx.fillStyle = wv.fill;
           ctx.fill();
         }
 
-        // 3) 거품 (foam) — 마지막 파도 위에 얇은 흰 띠
-        const lastW = waves[waves.length - 1];
+        /* 4) 거품 (foam) — 불규칙 너비의 흰 띠 */
         ctx.beginPath();
         for (let x = 0; x <= w; x += 2) {
-          const y = waveY(x, lastW, t, baseY);
-          if (x === 0) ctx.moveTo(x, y - 1);
-          else         ctx.lineTo(x, y - 1);
+          const y = waveY(x, front, t, baseY) - 2;
+          if (x === 0) ctx.moveTo(x, y);
+          else         ctx.lineTo(x, y);
         }
         for (let x = w; x >= 0; x -= 2) {
-          ctx.lineTo(x, waveY(x, foam, t, baseY + 10));
+          const fw = 8 + 7 * fbm(x * 0.02 + t * 0.3, 3); // 노이즈로 너비 변화
+          const y  = waveY(x, front, t, baseY) + fw;
+          ctx.lineTo(x, y);
         }
         ctx.closePath();
-        ctx.fillStyle = 'rgba(255,255,255,0.82)';
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
         ctx.fill();
+
+        /* 5) 거품 방울 — 포말 주변 흩뿌려진 점 */
+        for (const b of bubbles) {
+          const bx = b.xr * w;
+          const foamBase = waveY(bx, front, t, baseY);
+          const by = foamBase + b.yo;
+          if (by >= foamBase - 4 && by <= foamBase + 16) {
+            ctx.beginPath();
+            ctx.arc(bx, by, b.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255,255,255,${b.a})`;
+            ctx.fill();
+          }
+        }
+
+        /* 6) 파도 마루 하이라이트 — 밝은 선 */
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+        ctx.lineWidth = 1.5;
+        for (let x = 0; x <= w; x += 2) {
+          const y = waveY(x, front, t, baseY) - 3;
+          if (x === 0) ctx.moveTo(x, y);
+          else         ctx.lineTo(x, y);
+        }
+        ctx.stroke();
 
         requestAnimationFrame(draw);
       }

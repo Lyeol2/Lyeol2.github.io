@@ -12,27 +12,28 @@
       <canvas id="fish-canvas"></canvas>
 
       <!-- Navigation -->
-      <div class="navigate div-horizontal fill-horizontal">
-        <div class="icon-panel right-anchor r-padding-30">
-          <p class="brand-text right-anchor center">JJIJIM'S BLOG</p>
+      <div class="navigate div-horizontal">
+        <div class="icon-panel center">
+          <p class="brand-text center">JJIJIM'S BLOG</p>
         </div>
 
-        <div class="navigate-buttons div-horizontal right-anchor end-stacking fill l-padding-20">
-          <p class="home-text center">home</p>
-          <p class="post-text center">post</p>
-          <p class="none-text center">none</p>
-          <p class="none-text center">none</p>
+        <div class="navigate-buttons div-horizontal center">
+          <a href="index.html" class="nav-link center">home</a>
+          <a href="#post-section" class="nav-link center">post</a>
+          <a href="https://github.com/Lyeol2" target="_blank" class="nav-link center">github</a>
+          <a href="#" class="nav-link center" onclick="alert('contact 준비중입니다.')">contact</a>
         </div>
       </div>
 
       <!-- Main panel -->
       <div class="main-panel div-horizontal fill-horizontal">
-        <div class="title-container fill center div-vertical">
+        <div class="title-container center div-vertical">
           <h1 class="title-text">JJIJIM'S BLOG</h1>
           <p class="subtitle-text">devlog & blogging</p>
         </div>
 
-        <div class="right-half fill center">
+        <div class="right-half center">
+          <div class="tube-ripples"></div>
           <div class="frame" data-slider>
             <div class="slide-track">
             <section class="slide is-active">
@@ -88,8 +89,11 @@
         <canvas id="wave-canvas"></canvas>
       </div>
 
-      <!-- Bottom panel -->
-      <div class="bottom-panel div-horizontal fill-horizontal"></div>
+      <!-- Bottom panel (Sand beach) -->
+      <div id="post-section" class="bottom-panel">
+        <h2 class="sand-title">POSTS</h2>
+        <p class="sand-desc">아직 작성된 포스트가 없습니다.</p>
+      </div>
     </div>
   </main>
 

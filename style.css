@@ -4,9 +4,9 @@
   --sand: #FDBF5A;
   --black: #000000;
   --nav-height: 72px;
-  --frame-size: 400px; /* 튜브(프레임) 사이즈 증가 */
+  --frame-size: 440px; /* 튜브(프레임) 사이즈 대폭 증가 */
   --wave-height: 100px;
-  --bottom-panel-height: 100px;
+  --bottom-panel-height: 160px; /* 메인 화면 하단에 모래사장이 160px 만큼 보이도록 설정 */
 }
 
 /* Base */
@@ -23,6 +23,7 @@ body {
 
 html {
   scrollbar-width: none;
+  scroll-behavior: smooth; /* 부드러운 스크롤 이동 효과 추가 */
 }
 
 html::-webkit-scrollbar {
@@ -80,7 +81,7 @@ body {
 
 /* Page */
 .main-desktop {
-  width: 100vw;
+  width: 100%; /* 100vw로 하면 스크롤바 두께때문에 오른쪽으로 쏠리는 현상 발생 -> 100%로 수정 */
   min-height: 100vh;
   background: var(--blue);
 }
@@ -99,7 +100,9 @@ body {
   width: 100%;
   height: var(--nav-height);
   align-items: center;
-  background: var(--blue);
+  justify-content: space-between; /* 양쪽 끝으로 자동 분산 정렬 */
+  padding: 0 60px; /* 좌우 여백 설정 */
+  background: transparent; /* 배경색을 투명으로 하여 바다 배경과 자연스럽게 섞이게 변경 */
 }
 
 .icon-panel {
@@ -107,15 +110,39 @@ body {
   height: 100%;
 }
 
+/* 모바일이나 세로 높이가 좁을 때는 로고 숨김 처리 */
+@media (max-width: 768px), (max-height: 700px) {
+  .icon-panel {
+    display: none;
+  }
+}
+
 .brand-text {
   color: var(--white);
   height: 100%;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
 }
 
 .navigate-buttons {
-  color: var(--white);
   align-items: center;
   gap: 32px;
+}
+
+.nav-link {
+  color: var(--white);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 16px;
+  text-transform: uppercase; /* 글씨 대문자로 깔끔하게 */
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  color: var(--sand);
+  transform: translateY(-2px);
 }
 
 /* Main panel */
@@ -126,23 +153,21 @@ body {
   width: 100%;
   min-height: calc(100vh - var(--nav-height) - var(--wave-height) - var(--bottom-panel-height));
   align-items: center;
-  gap: 0;
+  justify-content: center; /* 타이틀과 튜브를 화면 중앙으로 모음 */
+  gap: 280px; /* 좌우 간격을 아주 넓게 확장 */
 }
 
 .title-container {
-  animation: floatTitle 6s ease-in-out infinite;
-}
-
-@keyframes floatTitle {
-  0%, 100% { transform: translateY(-6px) rotate(-1deg); }
-  50%      { transform: translateY(6px) rotate(1deg); }
+  /* 울렁거림 방지를 위해 타이틀 전체가 흔들리는 애니메이션은 제거하고 텍스트 빛반사 효과만 유지합니다 */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .title-text {
   margin: 0;
-  font-size: 56px;
-  font-weight: 900; /* 좀 더 볼드하게 */
-  letter-spacing: -0.5px;
+  font-size: 76px; /* 크기 대폭 증가 */
+  font-weight: 900;
+  letter-spacing: -1.5px; /* 크기가 커진 만큼 자간을 살짝 더 좁혀서 단단하게 */
   
   /* 빛반사(Shine) 물결 애니메이션 효과 */
   background: linear-gradient(
@@ -166,11 +191,60 @@ body {
 }
 
 .subtitle-text {
-  margin: 4px 0 0; /* 간격 줄임 */
-  color: var(--white); /* 완전한 흰색으로 변경 */
-  font-size: 20px;
+  margin: 8px 0 0; /* 타이틀이 커져서 간격 아주 살짝 증가 */
+  color: var(--white);
+  font-size: 24px; /* 서브타이틀도 비례해서 약간 증가 */
   font-weight: 500;
-  letter-spacing: 1px;
+  letter-spacing: 2px; /* 서브타이틀은 자간을 조금 늘려 세련되게 */
+}
+
+.right-half {
+  position: relative; /* 물결 효과 절대 배치 기준 */
+}
+
+/* 튜브 주변으로 퍼지는 물결 효과 */
+.tube-ripples {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--frame-size);
+  height: var(--frame-size);
+  margin-top: calc(var(--frame-size) / -2);
+  margin-left: calc(var(--frame-size) / -2);
+  pointer-events: none;
+  animation: floatTube 7s ease-in-out infinite; /* 튜브와 완벽하게 동기화된 움직임 */
+}
+
+.tube-ripples::before,
+.tube-ripples::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: solid rgba(255, 255, 255, 1); /* 투명도는 opacity로 조절 */
+  animation: rippleEffect 6s ease-out infinite; /* 훨씬 느리고 여유로운 파장 */
+}
+
+.tube-ripples::after {
+  animation-delay: 3s; /* 교차 간격도 3초로 증가 */
+}
+
+@keyframes rippleEffect {
+  0% {
+    transform: scale(1);
+    border-width: 10px;
+    opacity: 0.15; /* 강도를 아주 약하게 (은은하게) */
+  }
+  35% {
+    transform: scale(1.25);
+    border-width: 1.5px; /* 선형이 아니라 초반에 두께가 확 줄어드는 곡선형(비선형) 변화 */
+    opacity: 0.05; /* 투명도도 급격히 낮아짐 */
+  }
+  100% {
+    transform: scale(1.65); /* 튜브 밖으로 크게 퍼짐 */
+    border-width: 0px;
+    opacity: 0;
+  }
 }
 
 .frame {
@@ -178,34 +252,52 @@ body {
   overflow: hidden;
   width: var(--frame-size);
   height: var(--frame-size);
-  /* 가운데는 바다색, 바깥쪽 튜브는 6등분 스트라이프 */
-  background: 
-    radial-gradient(circle closest-side, var(--blue) 68%, transparent 69%),
-    conic-gradient(
-      from 30deg, 
-      #FE707E 0deg 60deg, 
-      #ffffff 60deg 120deg, 
-      #FE707E 120deg 180deg, 
-      #ffffff 180deg 240deg, 
-      #FE707E 240deg 300deg, 
-      #ffffff 300deg 360deg
-    );
+  /* 안쪽 구멍은 투명하게 비워 뒤의 물고기가 보이도록 하고, 외곽 쪽만 흰색을 깔아 번짐 방지 */
+  background: radial-gradient(circle closest-side, transparent 65%, #ffffff 66%);
   border-radius: 50%; /* 완벽한 원형 튜브 */
   box-shadow: 
-    inset 0 0 16px rgba(0, 0, 0, 0.1), /* 튜브의 안쪽 볼륨감 */
+    inset 0 0 16px rgba(0, 0, 0, 0.1), /* 전체 원형의 안쪽 볼륨감 */
     0 24px 48px rgba(0, 0, 0, 0.15), 
     0 8px 16px rgba(0, 0, 0, 0.1);
-  border: 4px solid #FFFFFF;
+  border: 4px solid #FFFFFF; /* 튜브 바깥쪽 마감선 (흰색 띠) */
   backdrop-filter: blur(10px);
-  animation: floatTube 7s ease-in-out infinite; /* 더 자연스럽고 여유로운 타이밍 */
+  animation: floatTube 7s ease-in-out infinite;
 }
 
-/* 파도에 둥둥 떠다니는 자연스러운 모션 (타원형/8자 궤도 + 약간의 회전) */
+/* 튜브 링을 글자 위(앞)에 덮도록 가상 요소 사용 */
+.frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none; /* 클릭은 통과하게 설정 */
+  
+  /* 안쪽 흰색 테두리 + 8등분 스트라이프 패턴 */
+  background: 
+    radial-gradient(circle closest-side, transparent 63.5%, #ffffff 64%, #ffffff 66%, transparent 66.5%),
+    conic-gradient(
+      from 22.5deg, 
+      #FE707E 0deg 45deg, 
+      #ffffff 45deg 90deg, 
+      #FE707E 90deg 135deg, 
+      #ffffff 135deg 180deg, 
+      #FE707E 180deg 225deg, 
+      #ffffff 225deg 270deg, 
+      #FE707E 270deg 315deg, 
+      #ffffff 315deg 360deg
+    );
+  
+  /* 마스크로 튜브 구멍 뚫기 (64%로 늘려서 두께를 얇게 조정) */
+  -webkit-mask-image: radial-gradient(circle closest-side, transparent 64%, black 64.5%);
+  mask-image: radial-gradient(circle closest-side, transparent 64%, black 64.5%);
+}
+
+/* 파도에 둥둥 떠다니는 자연스러운 모션 (멀미를 줄이기 위해 움직임 폭을 대폭 축소) */
 @keyframes floatTube {
-  0%, 100% { transform: translate(0px, -12px) rotate(-2deg); }
-  25%      { transform: translate(8px, 2px) rotate(1deg); }
-  50%      { transform: translate(0px, 14px) rotate(3deg); }
-  75%      { transform: translate(-8px, 2px) rotate(0deg); }
+  0%, 100% { transform: translate(0px, -4px) rotate(-2deg); }
+  25%      { transform: translate(3px, 1px) rotate(1deg); }
+  50%      { transform: translate(0px, 4px) rotate(3deg); }
+  75%      { transform: translate(-3px, 1px) rotate(-1deg); }
 }
 
 .slide-track {
@@ -222,7 +314,7 @@ body {
   justify-content: center;
   align-items: center; /* 원형에 맞게 가로 중앙 정렬 */
   text-align: center; /* 텍스트 중앙 정렬 */
-  padding: 64px; /* 도넛 링(스트라이프) 영역을 침범하지 않도록 여백 대폭 증가 */
+  padding: 32px; /* 글자와 튜브 사이 간격을 바짝 좁힘 */
 }
 
 .slide-kicker {
@@ -415,12 +507,131 @@ body {
   z-index: 1;
 }
 
-/* Bottom panel */
+/* Bottom panel (모래사장 포스트 영역) */
 .bottom-panel {
   position: relative;
   z-index: 2;
   overflow: hidden;
-  flex: 0 0 var(--bottom-panel-height);
-  min-height: var(--bottom-panel-height);
+  min-height: 100vh; /* 화면 전체를 덮는 새로운 섹션으로 확장 */
   background: var(--sand);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center; /* 추가: 내부 텍스트 완벽한 중앙 정렬 */
+}
+
+.sand-title {
+  font-size: 48px;
+  color: #B37A20; /* 모래색 대비 진한 갈색 */
+  margin: 0 0 16px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.sand-desc {
+  font-size: 18px;
+  color: #C28E3A;
+  font-weight: 500;
+}
+
+/* --- Responsive Layout --- */
+@media (max-width: 1100px) {
+  .main-panel {
+    flex-direction: column !important; /* 좌우 분할을 상하 분할로 변경 */
+    justify-content: center;
+    gap: 120px; /* 위아래 간격은 이전의 적당했던 상태로 복구 */
+    padding: 80px 0; /* 세로 뷰에서 답답하지 않게 위아래 공간 확보 */
+    height: auto !important; /* 높이를 유동적으로 키움 */
+    flex-shrink: 0 !important; /* 화면 높이가 모자라더라도 패널이 찌그러져 튜브가 아래쪽 파도에 잘리는 현상 방지 */
+  }
+  
+  .title-container,
+  .right-half {
+    flex: 0 0 auto !important; /* 상하 50:50 분할 해제 */
+    width: 100%;
+    justify-content: center !important;
+    text-align: center; /* 확실한 중앙 정렬 */
+  }
+
+  .title-text {
+    white-space: nowrap; /* 글씨가 어정쩡하게 두 줄로 내려가는 것 방지 */
+    margin: 0 auto; /* 블록 요소 자체도 중앙 정렬 */
+  }
+}
+
+@media (max-width: 768px) {
+  .main-panel {
+    gap: 40px !important; /* 모바일 화면에서는 글자와 튜브 사이 간격을 크게 줄임 */
+    padding: 20px 0 !important; /* 위아래 여백을 대폭 줄여 전체 콘텐츠 높이가 100vh를 넘지 않게 해 모래사장이 자연스럽게 이어지도록 유도 */
+  }
+
+  /* 모바일 화면에 맞춰 크기 자동 조절 */
+  .title-text {
+    font-size: 11vw; 
+  }
+  
+  :root {
+    --frame-size: 300px; /* 모바일에서는 튜브가 화면을 뚫지 않게 크기 축소 */
+  }
+  
+  .subtitle-text {
+    font-size: 18px;
+  }
+
+  .navigate {
+    padding: 16px 20px; /* 상하 여백 추가 */
+    flex-direction: column; /* 모바일에서는 로고와 버튼을 위아래로 깔끔하게 배치 */
+    justify-content: center;
+    height: auto;
+    gap: 16px;
+  }
+  .navigate-buttons {
+    gap: 12px; /* 모바일 메뉴 간격 축소 */
+    flex-wrap: wrap; /* 화면이 좁을 때 버튼들이 겹치지 않고 줄바꿈되도록 설정 */
+    justify-content: center;
+  }
+  
+  .main-panel {
+    padding-top: 140px !important; /* 모바일에서 네비게이션과 타이틀 사이의 간격을 훨씬 넓힘 */
+  }
+
+  .nav-link {
+    font-size: 14px;
+  }
+  .brand-text {
+    font-size: 18px;
+  }
+
+  /* 튜브 크기 축소 시 안쪽 내용물이 도넛 링과 겹치거나 삐져나오지 않도록 비율에 맞춰 내부 폰트/여백 줄임 */
+  .slide {
+    padding: 30px 20px !important; /* 내부 여백 축소 */
+  }
+  .slide h2 {
+    font-size: 22px !important;
+  }
+  .stat-number {
+    font-size: 36px !important;
+  }
+  .slide-desc {
+    font-size: 13px !important;
+    margin-top: 8px !important;
+  }
+  .recent-post-list {
+    gap: 10px !important;
+  }
+  .recent-post-list li {
+    font-size: 12px !important;
+  }
+  .slide-controls {
+    bottom: 24px !important; /* 하단 인디케이터 위치 위로 올림 */
+  }
+  .social-links {
+    flex-direction: column; /* 모바일엔 공간 부족하므로 세로 배치 */
+    gap: 8px;
+  }
+  .social-link {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+  }
 }

@@ -83,26 +83,34 @@ body {
 .main-desktop {
   width: 100%; /* 100vw로 하면 스크롤바 두께때문에 오른쪽으로 쏠리는 현상 발생 -> 100%로 수정 */
   min-height: 100vh;
+  min-height: 100dvh; /* 모바일 브라우저 주소창 높이 대응 */
   background: var(--blue);
+  display: flex; /* Safari의 min-height flex 버그 방지 */
+  flex-direction: column;
 }
 
 .main-stack {
   position: relative;
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh; /* 모바일 브라우저 주소창 높이 대응 */
 }
 
 /* Navigation */
 .navigate {
-  position: relative;
-  z-index: 2;
+  position: sticky; /* 스크롤 시 화면 상단에 고정 */
+  top: 0;
+  z-index: 999; /* 다른 모든 요소보다 항상 위에 있도록 설정 */
   flex: 0 0 var(--nav-height);
   width: 100%;
   height: var(--nav-height);
   align-items: center;
   justify-content: space-between; /* 양쪽 끝으로 자동 분산 정렬 */
   padding: 0 60px; /* 좌우 여백 설정 */
-  background: transparent; /* 배경색을 투명으로 하여 바다 배경과 자연스럽게 섞이게 변경 */
+  /* 투명 배경 유지하면서 아래가 살짝 비치는 반투명 블러(Glassmorphism) 효과 추가 */
+  background: rgba(0, 133, 251, 0.2); 
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .icon-panel {
@@ -150,8 +158,10 @@ body {
   position: relative;
   z-index: 2;
   flex: 1 1 calc(100vh - var(--nav-height) - var(--wave-height) - var(--bottom-panel-height));
+  flex: 1 1 calc(100dvh - var(--nav-height) - var(--wave-height) - var(--bottom-panel-height)); /* 모바일 호환성 (dvh) */
   width: 100%;
   min-height: calc(100vh - var(--nav-height) - var(--wave-height) - var(--bottom-panel-height));
+  min-height: calc(100dvh - var(--nav-height) - var(--wave-height) - var(--bottom-panel-height)); /* 모바일 호환성 (dvh) */
   align-items: center;
   justify-content: center; /* 타이틀과 튜브를 화면 중앙으로 모음 */
   gap: 280px; /* 좌우 간격을 아주 넓게 확장 */
@@ -260,7 +270,8 @@ body {
     0 24px 48px rgba(0, 0, 0, 0.15), 
     0 8px 16px rgba(0, 0, 0, 0.1);
   border: 4px solid #FFFFFF; /* 튜브 바깥쪽 마감선 (흰색 띠) */
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(4px); /* 블러 강도 약하게 수정 */
+  -webkit-backdrop-filter: blur(4px); /* iOS Safari 렌더링 깨짐 방지 */
   animation: floatTube 7s ease-in-out infinite;
 }
 
@@ -511,6 +522,7 @@ body {
 .bottom-panel {
   position: relative;
   z-index: 2;
+  scroll-margin-top: calc(var(--nav-height) + 50px); /* post 탭 이동 시, 네비게이션 높이 + 파도 높이 50px만큼 덜 내려가서 해변이 살짝 보이게 설정 */
   overflow: hidden;
   min-height: 100vh; /* 화면 전체를 덮는 새로운 섹션으로 확장 */
   background: var(--sand);

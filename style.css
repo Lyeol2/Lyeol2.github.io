@@ -578,10 +578,10 @@ body {
 /* Post Container (3-Column Grid) */
 .post-container {
   display: grid;
-  grid-template-columns: 240px 1fr 240px; /* 좌 240px, 중앙 가변, 우 240px */
+  grid-template-columns: 220px 1fr 220px; /* 양옆 사이드바를 더 줄여 중앙 영역 최대한 확보 */
   gap: 32px;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1560px; /* 전체 너비를 훨씬 넓게 (기존 1340px -> 1560px) */
   margin: 0 auto;
   align-items: start; /* 콘텐츠 높이에 맞게 위로 정렬 */
   padding: 40px 20px;
@@ -647,200 +647,7 @@ body {
   font-weight: 800;
 }
 
-/* Slide 03: Social Links */
-.social-links {
-  margin-top: 18px;
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  flex-wrap: wrap; /* 혹시 넘치면 줄바꿈 */
-}
 
-.social-link {
-  display: inline-block;
-  padding: 8px 14px;
-  background: rgba(255, 255, 255, 0.15);
-  color: var(--white);
-  text-decoration: none;
-  border-radius: 20px; /* 버튼도 알약 모양으로 변경 */
-  font-weight: 700;
-  font-size: 13px;
-  transition: all 0.2s ease;
-}
-
-.social-link:hover {
-  background: var(--white);
-  color: var(--blue);
-  transform: translateY(-2px);
-}
-
-.slide-controls {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 40px; /* 도넛 링을 살짝 걸치거나 안쪽에 위치하도록 위로 올림 */
-  display: flex;
-  align-items: center;
-  justify-content: center; /* 화살표 없이 중앙 정렬 */
-  pointer-events: none;
-}
-
-.slide-button,
-.slide-dot {
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  pointer-events: auto;
-}
-
-.slide-button {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  color: var(--white);
-  background: var(--blue);
-  font-size: 26px;
-  line-height: 1;
-}
-
-.slide-button:hover {
-  background: #006ed4;
-}
-
-.slide-dots {
-  display: flex;
-  gap: 8px;
-  pointer-events: auto;
-}
-
-.slide-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.slide-dot.is-active {
-  width: 22px;
-  border-radius: 999px;
-  background: var(--white);
-}
-
-/* Wave section */
-.wave-section {
-  position: relative;
-  z-index: 2;
-  flex: 0 0 var(--wave-height);
-  width: 100%;
-  height: var(--wave-height);
-  overflow: hidden;
-}
-
-#wave-canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-/* Fish (Boids) overlay */
-#fish-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* Bottom panel (모래사장 포스트 영역) */
-.bottom-panel {
-  position: relative;
-  z-index: 2;
-  scroll-margin-top: calc(var(--nav-height) + 70px); /* post 탭 이동 시, 네비게이션 높이 + 파도 높이 70px만큼 덜 내려가서 해변이 살짝 보이게 설정 */
-  overflow: hidden;
-  min-height: 100vh; /* 화면 전체를 덮는 새로운 섹션으로 확장 */
-  background: var(--sand);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center; /* 추가: 내부 텍스트 완벽한 중앙 정렬 */
-}
-
-/* Post Container (3-Column Grid) */
-.post-container {
-  display: grid;
-  grid-template-columns: 240px 1fr 240px; /* 좌 240px, 중앙 가변, 우 240px */
-  gap: 32px;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  align-items: start; /* 콘텐츠 높이에 맞게 위로 정렬 */
-  padding: 40px 20px;
-}
-
-/* Glassmorphism Panel */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.4); /* 반투명 흰색 */
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05); /* 부드러운 그림자 */
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  text-align: left;
-}
-
-.post-card.glass-panel:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
-}
-
-/* Sidebar Widgets */
-.post-sidebar .widget {
-  margin-bottom: 24px;
-}
-
-.post-sidebar h3 {
-  margin: 0 0 16px 0;
-  font-size: 18px;
-  font-weight: 800;
-  color: #8c5b16; /* 모래색에 어울리는 짙은 갈색 */
-  border-bottom: 2px solid rgba(140, 91, 22, 0.2);
-  padding-bottom: 8px;
-}
-
-/* Category List */
-.category-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.category-list li {
-  margin-bottom: 12px;
-}
-
-.category-list a {
-  text-decoration: none;
-  color: #5a3c10;
-  font-weight: 600;
-  font-size: 15px;
-  transition: color 0.2s ease;
-}
-
-.category-list a:hover {
-  color: #d16b15;
-}
-
-.category-list .is-active a {
-  color: #FE707E; /* 튜브 색상(포인트 컬러) */
-  font-weight: 800;
-}
 
 /* Main Posts Section */
 .post-header h2 {
@@ -1436,6 +1243,123 @@ body {
   border-radius: 12px;
   object-fit: contain;
   background: rgba(255, 255, 255, 0.42);
+}
+
+/* --- Obsidian Markdown Elements --- */
+.obs-highlight {
+  background-color: rgba(255, 230, 0, 0.4);
+  padding: 0 4px;
+  border-radius: 4px;
+}
+
+.obs-inline-code {
+  background: rgba(0, 0, 0, 0.05);
+  color: #FE707E;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: Consolas, Monaco, monospace;
+  font-size: 0.9em;
+}
+
+.obs-ext-link {
+  color: #006ed4;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.obs-ext-link:hover {
+  text-decoration: underline;
+}
+
+.obs-internal-link {
+  color: #FE707E;
+  text-decoration: none;
+  font-weight: 700;
+  padding: 0 2px;
+  transition: all 0.2s ease;
+}
+
+.obs-internal-link:hover {
+  background: rgba(254, 112, 126, 0.1);
+  border-radius: 4px;
+}
+
+/* Obsidian Link Cards */
+.obs-cardlink.glass-panel {
+  display: flex;
+  flex-direction: row;
+  margin: 24px 0;
+  padding: 0; /* glass-panel의 기본 여백 제거하여 이미지가 꽉 차게 */
+  text-decoration: none !important;
+  color: inherit;
+  overflow: hidden;
+  align-items: stretch;
+}
+
+.obs-cardlink:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+}
+
+.obs-cardlink .cardlink-content {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.cardlink-title {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.cardlink-desc {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cardlink-host {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #888;
+  font-weight: 600;
+}
+
+.cardlink-favicon {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+}
+
+.cardlink-image {
+  flex: 0 0 240px;
+  overflow: hidden;
+}
+
+.cardlink-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 600px) {
+  .obs-cardlink.glass-panel {
+    flex-direction: column-reverse;
+  }
+  .cardlink-image {
+    flex: 0 0 160px;
+  }
 }
 
 .nav-link:hover,

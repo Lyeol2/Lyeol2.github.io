@@ -9,6 +9,8 @@
 <body>
   <main class="main-desktop">
     <div class="main-stack div-vertical fill">
+      <canvas id="fish-canvas"></canvas>
+
       <!-- Navigation -->
       <div class="navigate div-horizontal fill-horizontal">
         <div class="icon-panel right-anchor r-padding-30">
@@ -25,35 +27,58 @@
 
       <!-- Main panel -->
       <div class="main-panel div-horizontal fill-horizontal">
-        <p class="title-text fill center">title-text</p>
+        <div class="title-container fill center div-vertical">
+          <h1 class="title-text">JJIJIM'S BLOG</h1>
+          <p class="subtitle-text">devlog & blogging</p>
+        </div>
 
-        <div class="frame frame-right-half" data-slider>
-          <div class="slide-track">
+        <div class="right-half fill center">
+          <div class="frame" data-slider>
+            <div class="slide-track">
             <section class="slide is-active">
               <p class="slide-kicker">01</p>
-              <h2>Today</h2>
-              <p>짧게 쓰고 자주 돌아보는 기록.</p>
+              <h2>Total Posts</h2>
+              <div class="stat-box">
+                <span class="stat-number">42</span>
+                <span class="stat-label">posts published</span>
+              </div>
             </section>
             <section class="slide">
               <p class="slide-kicker">02</p>
-              <h2>Build</h2>
-              <p>만든 것과 고친 이유를 남기기.</p>
+              <h2>Recent Posts</h2>
+              <ul class="recent-post-list">
+                <li>
+                  <a href="#">새로운 프로젝트 시작하기</a>
+                  <span class="date">2026.05.20</span>
+                </li>
+                <li>
+                  <a href="#">파도 애니메이션 구현기</a>
+                  <span class="date">2026.05.18</span>
+                </li>
+                <li>
+                  <a href="#">프론트엔드 최적화 팁</a>
+                  <span class="date">2026.05.15</span>
+                </li>
+              </ul>
             </section>
             <section class="slide">
               <p class="slide-kicker">03</p>
-              <h2>Learn</h2>
-              <p>다음 작업을 위한 작은 힌트 모으기.</p>
+              <h2>About Me</h2>
+              <p class="slide-desc">안녕하세여 찌짐 블로그에 온걸 환영합니다</p>
+              <div class="social-links">
+                <a href="https://github.com/Lyeol2" target="_blank" class="social-link">GitHub</a>
+                <a href="#" target="_blank" class="social-link">SNS</a>
+              </div>
             </section>
           </div>
 
           <div class="slide-controls" aria-label="슬라이드 조작">
-            <button class="slide-button" type="button" data-slide-prev aria-label="이전 슬라이드">‹</button>
             <div class="slide-dots" aria-label="슬라이드 위치">
               <button class="slide-dot is-active" type="button" data-slide-dot="0" aria-label="1번 슬라이드"></button>
               <button class="slide-dot" type="button" data-slide-dot="1" aria-label="2번 슬라이드"></button>
               <button class="slide-dot" type="button" data-slide-dot="2" aria-label="3번 슬라이드"></button>
             </div>
-            <button class="slide-button" type="button" data-slide-next aria-label="다음 슬라이드">›</button>
+          </div>
           </div>
         </div>
       </div>
@@ -75,9 +100,14 @@
       const track = slider.querySelector(".slide-track");
       const slides = [...slider.querySelectorAll(".slide")];
       const dots = [...slider.querySelectorAll(".slide-dot")];
-      const prevButton = slider.querySelector("[data-slide-prev]");
-      const nextButton = slider.querySelector("[data-slide-next]");
       let currentSlide = 0;
+
+      slider.style.cursor = "pointer";
+      slider.addEventListener("click", (e) => {
+        // 링크나 점(dot)을 클릭한 경우에는 무시
+        if (e.target.closest(".slide-dot") || e.target.closest("a")) return;
+        showSlide(currentSlide + 1);
+      });
 
       function showSlide(index) {
         currentSlide = (index + slides.length) % slides.length;
@@ -92,21 +122,17 @@
         });
       }
 
-      prevButton.addEventListener("click", () => showSlide(currentSlide - 1));
-      nextButton.addEventListener("click", () => showSlide(currentSlide + 1));
-
       dots.forEach((dot) => {
         dot.addEventListener("click", () => showSlide(Number(dot.dataset.slideDot)));
       });
     }
 
-    /* ── Wave Animation v2 — noise-enhanced ── */
+    /* ── Wave Animation v4 — Clean Vector Style ── */
     (function () {
       const canvas = document.getElementById('wave-canvas');
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
 
-      /* ─── 리사이즈 (HiDPI) ─── */
       function resize() {
         const dpr = window.devicePixelRatio || 1;
         const rect = canvas.getBoundingClientRect();
@@ -117,152 +143,110 @@
       resize();
       window.addEventListener('resize', resize);
 
-      /* ─── 노이즈 유틸리티 ─── */
-      function hash(n) {
-        const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
-        return x - Math.floor(x);
-      }
+      const OCEAN_MAIN = '#0085FB'; 
+      const SAND       = '#FDBF5A';
 
-      // 부드러운 1D value noise
-      function noise(x) {
-        const i = Math.floor(x);
-        const f = x - i;
-        const u = f * f * (3 - 2 * f); // smoothstep
-        return hash(i) * (1 - u) + hash(i + 1) * u;
-      }
-
-      // fBm (Fractal Brownian Motion) — 여러 옥타브의 노이즈 합성
-      function fbm(x, octaves) {
-        let val = 0, amp = 1, freq = 1, max = 0;
-        for (let i = 0; i < octaves; i++) {
-          val += amp * (noise(x * freq) - 0.5);
-          max += amp;
-          amp *= 0.5;
-          freq *= 2.0;
-        }
-        return val / max; // 대략 [-0.5, 0.5] 범위
-      }
-
-      /* ─── 색상 ─── */
-      const OCEAN_DEEP  = '#0070D8';
-      const OCEAN       = '#0085FB';
-      const OCEAN_LIGHT = '#3DA5FF';
-      const SAND        = '#FDBF5A';
-      const SAND_WET    = '#E5A94D';
-
-      /* ─── 파도 레이어 (뒤→앞) ─── */
-      const waves = [
-        { amp: 16, len: 340, spd: 0.35, phase: 0.0, nAmp: 6, nScale: 0.008, fill: OCEAN_DEEP },
-        { amp: 11, len: 240, spd: 0.50, phase: 1.6, nAmp: 5, nScale: 0.012, fill: OCEAN },
-        { amp:  8, len: 170, spd: 0.70, phase: 3.2, nAmp: 4, nScale: 0.015, fill: OCEAN_LIGHT },
+      const layers = [
+        // Layer 0: Shallow water (touches sand, lightest)
+        { color: '#5CBBFF', amp: 14, freq: 0.0022, spd: 0.0010, phase: 0.0, offsetY: 25 },
+        // Layer 1: Mid water
+        { color: '#2EA0FF', amp: 12, freq: 0.0028, spd: 0.0012, phase: 2.0, offsetY: 10 },
+        // Layer 2: Deep water (matches main panel)
+        { color: OCEAN_MAIN, amp: 10, freq: 0.0035, spd: 0.0015, phase: 4.0, offsetY: -5 },
       ];
 
-      // 상하 움직임 (bobbing)
-      const bob = { amp: 5, spd: 0.3 };
+      const bob = { amp: 4, spd: 0.0015 };
 
-      /* ─── 파형 y좌표 — 사인파 + fBm 노이즈 ─── */
-      function waveY(x, wv, t, base) {
-        const sine = wv.amp * Math.sin((x / wv.len) * Math.PI * 2 + t * wv.spd * Math.PI * 2 + wv.phase);
-        const n    = wv.nAmp * fbm(x * wv.nScale + t * wv.spd * 0.5, 4);
-        return base + sine + n;
+      function waveY(x, t, layer, base) {
+        return base + layer.offsetY +
+               layer.amp * Math.sin(x * layer.freq + t * layer.spd + layer.phase) + 
+               (layer.amp * 0.4) * Math.sin(x * layer.freq * 2.3 - t * layer.spd * 1.3);
       }
 
-      /* ─── 거품 방울 사전 생성 ─── */
-      const bubbles = [];
-      for (let i = 0; i < 100; i++) {
-        bubbles.push({
-          xr:  hash(i * 13 + 7),
-          yo:  (hash(i * 17 + 3) - 0.5) * 18,
-          r:   1 + hash(i * 23 + 11) * 2.5,
-          a:   0.25 + hash(i * 31 + 5) * 0.55,
-        });
-      }
-
-      /* ─── 메인 드로우 ─── */
-      const t0 = performance.now();
-
-      function draw(now) {
-        const t = (now - t0) / 1000;
+      function draw() {
+        const t = performance.now();
         const w = canvas.getBoundingClientRect().width;
         const h = canvas.getBoundingClientRect().height;
 
-        const bobY  = bob.amp * Math.sin(t * bob.spd * Math.PI * 2);
-        const baseY = h * 0.42 + bobY;
-        const front = waves[waves.length - 1]; // 앞쪽 파도 기준선
+        const bobY = bob.amp * Math.sin(t * bob.spd);
+        const baseY = h * 0.45 + bobY;
 
         ctx.clearRect(0, 0, w, h);
 
-        /* 1) 배경 — 모래 */
+        // 1. Sand Background
         ctx.fillStyle = SAND;
         ctx.fillRect(0, 0, w, h);
 
-        /* 2) 젖은 모래 그라디언트 — 거품 아래 */
+        // 2. Layer 0 (Shallow)
         ctx.beginPath();
-        for (let x = 0; x <= w; x += 2) {
-          const y = waveY(x, front, t, baseY) + 14;
-          if (x === 0) ctx.moveTo(x, y);
-          else         ctx.lineTo(x, y);
-        }
-        ctx.lineTo(w, h);
-        ctx.lineTo(0, h);
+        ctx.moveTo(0, 0);
+        for (let x = 0; x <= w; x += 5) ctx.lineTo(x, waveY(x, t, layers[0], baseY));
+        ctx.lineTo(w, 0);
         ctx.closePath();
-        const wetG = ctx.createLinearGradient(0, baseY + 8, 0, baseY + 42);
-        wetG.addColorStop(0, SAND_WET);
-        wetG.addColorStop(1, SAND);
-        ctx.fillStyle = wetG;
+        ctx.fillStyle = layers[0].color;
         ctx.fill();
 
-        /* 3) 파도 레이어 (뒤→앞) — 노이즈 포함 */
-        for (const wv of waves) {
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          for (let x = 0; x <= w; x += 2) {
-            ctx.lineTo(x, waveY(x, wv, t, baseY));
-          }
-          ctx.lineTo(w, 0);
-          ctx.closePath();
-          ctx.fillStyle = wv.fill;
-          ctx.fill();
-        }
-
-        /* 4) 거품 (foam) — 불규칙 너비의 흰 띠 */
+        // 3. Foam on Shallow Water
+        const shallow = layers[0];
+        
+        // Translucent foam wash
         ctx.beginPath();
-        for (let x = 0; x <= w; x += 2) {
-          const y = waveY(x, front, t, baseY) - 2;
-          if (x === 0) ctx.moveTo(x, y);
-          else         ctx.lineTo(x, y);
-        }
-        for (let x = w; x >= 0; x -= 2) {
-          const fw = 8 + 7 * fbm(x * 0.02 + t * 0.3, 3); // 노이즈로 너비 변화
-          const y  = waveY(x, front, t, baseY) + fw;
-          ctx.lineTo(x, y);
+        for (let x = 0; x <= w; x += 5) ctx.lineTo(x, waveY(x, t, shallow, baseY) - 1); 
+        for (let x = w; x >= 0; x -= 5) {
+          const thickness = 20 + 12 * Math.sin(x * 0.008 - t * 0.002);
+          ctx.lineTo(x, waveY(x, t, shallow, baseY) + thickness);
         }
         ctx.closePath();
-        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
         ctx.fill();
 
-        /* 5) 거품 방울 — 포말 주변 흩뿌려진 점 */
-        for (const b of bubbles) {
-          const bx = b.xr * w;
-          const foamBase = waveY(bx, front, t, baseY);
-          const by = foamBase + b.yo;
-          if (by >= foamBase - 4 && by <= foamBase + 16) {
-            ctx.beginPath();
-            ctx.arc(bx, by, b.r, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255,255,255,${b.a})`;
-            ctx.fill();
-          }
-        }
-
-        /* 6) 파도 마루 하이라이트 — 밝은 선 */
+        // Solid foam edge
         ctx.beginPath();
-        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+        for (let x = 0; x <= w; x += 5) ctx.lineTo(x, waveY(x, t, shallow, baseY) - 2); 
+        for (let x = w; x >= 0; x -= 5) {
+          const thickness = 6 + 5 * Math.sin(x * 0.012 + t * 0.003);
+          ctx.lineTo(x, waveY(x, t, shallow, baseY) + thickness);
+        }
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.fill();
+
+        // 4. Layer 1 (Mid)
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        for (let x = 0; x <= w; x += 5) ctx.lineTo(x, waveY(x, t, layers[1], baseY));
+        ctx.lineTo(w, 0);
+        ctx.closePath();
+        ctx.fillStyle = layers[1].color;
+        ctx.fill();
+        
+        // Mid highlight
+        ctx.beginPath();
+        for (let x = 0; x <= w; x += 5) {
+          const y = waveY(x, t, layers[1], baseY);
+          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
         ctx.lineWidth = 1.5;
-        for (let x = 0; x <= w; x += 2) {
-          const y = waveY(x, front, t, baseY) - 3;
-          if (x === 0) ctx.moveTo(x, y);
-          else         ctx.lineTo(x, y);
+        ctx.stroke();
+
+        // 5. Layer 2 (Deep)
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        for (let x = 0; x <= w; x += 5) ctx.lineTo(x, waveY(x, t, layers[2], baseY));
+        ctx.lineTo(w, 0);
+        ctx.closePath();
+        ctx.fillStyle = layers[2].color;
+        ctx.fill();
+
+        // Deep highlight
+        ctx.beginPath();
+        for (let x = 0; x <= w; x += 5) {
+          const y = waveY(x, t, layers[2], baseY);
+          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         }
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
         requestAnimationFrame(draw);
@@ -271,6 +255,202 @@
       requestAnimationFrame(draw);
     })();
 
+  </script>
+
+  <script>
+    /* ── Boids Fish Animation ── */
+    (function () {
+      const canvas = document.getElementById('fish-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      /* --- 설정 --- */
+      const NUM_FISH   = 35;
+      const VISUAL     = 80;                 // 인식 반경
+      const SEP_DIST   = 28;                 // 분리 거리
+      const BASE_MAX   = 2.5;
+      const BASE_MIN   = 1.2;
+      const W_SEP      = 0.05;               // 분리 가중치
+      const W_ALI      = 0.04;               // 정렬 가중치
+      const W_COH      = 0.001;              // 응집 가중치 (줄임)
+      const TURN       = 0.3;                // 가장자리 회피 강도
+      const EDGE       = 60;                 // 가장자리 여백
+
+      /* --- 깊이별 남색 (depth 0=깊은곳/멀리, 1=가까이) --- */
+      // 깊은 물고기: 작고, 연하고, 느리게
+      // 가까운 물고기: 크고, 진하고, 빠르게
+      function fishColor(depth) {
+        // 남색 RGB: 26, 26, 94 → depth에 따라 밝기·투명도 조절
+        const r = 10 + depth * 16;            // 10 ~ 26
+        const g = 10 + depth * 16;            // 10 ~ 26
+        const b = 50 + depth * 48;            // 50 ~ 98
+        const a = 0.25 + depth * 0.55;        // 0.25 ~ 0.80
+        return `rgba(${r|0},${g|0},${b|0},${a.toFixed(2)})`;
+      }
+
+      let W, H, oceanBottom;
+      const school = [];
+
+      /* --- 리사이즈 (HiDPI 대응) --- */
+      function resize() {
+        const dpr  = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        W = rect.width;
+        H = rect.height;
+        canvas.width  = W * dpr;
+        canvas.height = H * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        // 파도 시작 지점 = 바다 하한선
+        const wave = document.querySelector('.wave-section');
+        if (wave) {
+          const stackRect = canvas.parentElement.getBoundingClientRect();
+          oceanBottom = wave.getBoundingClientRect().top - stackRect.top;
+        } else {
+          oceanBottom = H * 0.75;
+        }
+      }
+
+      /* --- 물고기 생성 --- */
+      function spawn() {
+        school.length = 0;
+        for (let i = 0; i < NUM_FISH; i++) {
+          const a = Math.random() * Math.PI * 2;
+          const baseDepth = Math.random();
+          const depthPhase = Math.random() * Math.PI * 2;
+          const depthSpd = 0.005 + Math.random() * 0.01; // 천천히 깊이가 변함
+          
+          const depth = baseDepth + Math.sin(depthPhase) * 0.35;
+          const clampedDepth = Math.max(0, Math.min(1, depth));
+          
+          const spdMul = 0.6 + clampedDepth * 0.4;
+          const szMul  = 0.5 + clampedDepth * 0.5;
+          const spd = (BASE_MIN + Math.random() * (BASE_MAX - BASE_MIN)) * spdMul;
+          const baseSz = 15 + Math.random() * 15;
+          
+          school.push({
+            x:  EDGE + Math.random() * Math.max(1, W - EDGE * 2),
+            y:  EDGE + Math.random() * Math.max(1, oceanBottom - EDGE * 2),
+            vx: Math.cos(a) * spd,
+            vy: Math.sin(a) * spd,
+            baseDepth: baseDepth,
+            depthPhase: depthPhase,
+            depthSpd: depthSpd,
+            depth: clampedDepth,
+            baseSz: baseSz,
+            sz: baseSz * szMul,
+            maxSpd: BASE_MAX * spdMul,
+            minSpd: BASE_MIN * spdMul,
+            tp: Math.random() * Math.PI * 2,
+            color: fishColor(clampedDepth),
+          });
+        }
+        // depth 순으로 초기 정렬
+        school.sort((a, b) => a.depth - b.depth);
+      }
+
+      /* --- 보이드 규칙 적용 --- */
+      function update() {
+        for (let i = 0; i < school.length; i++) {
+          const f = school[i];
+          let sx = 0, sy = 0;   // separation
+          let ax = 0, ay = 0;   // alignment
+          let cx = 0, cy = 0;   // cohesion
+          let n = 0;
+
+          for (let j = 0; j < school.length; j++) {
+            if (i === j) continue;
+            const o = school[j];
+            // 비슷한 depth끼리만 상호작용 (레이어 분리)
+            if (Math.abs(o.depth - f.depth) > 0.35) continue;
+            const dx = o.x - f.x, dy = o.y - f.y;
+            const d = Math.sqrt(dx * dx + dy * dy);
+
+            if (d < VISUAL) {
+              if (d < SEP_DIST && d > 0) { sx -= dx / d; sy -= dy / d; }
+              ax += o.vx; ay += o.vy;
+              cx += o.x;  cy += o.y;
+              n++;
+            }
+          }
+
+          if (n) {
+            ax /= n; ay /= n;
+            cx = cx / n - f.x; cy = cy / n - f.y;
+            f.vx += sx * W_SEP + (ax - f.vx) * W_ALI + cx * W_COH;
+            f.vy += sy * W_SEP + (ay - f.vy) * W_ALI + cy * W_COH;
+          }
+
+          // 가장자리 회피
+          if (f.x < EDGE)              f.vx += TURN;
+          if (f.x > W - EDGE)          f.vx -= TURN;
+          if (f.y < EDGE)              f.vy += TURN;
+          if (f.y > oceanBottom - EDGE) f.vy -= TURN;
+
+          // 속도 제한 (depth별 개별 속도)
+          const spd = Math.sqrt(f.vx * f.vx + f.vy * f.vy);
+          if (spd > f.maxSpd) {
+            f.vx = f.vx / spd * f.maxSpd;
+            f.vy = f.vy / spd * f.maxSpd;
+          } else if (spd < f.minSpd && spd > 0) {
+            f.vx = f.vx / spd * f.minSpd;
+            f.vy = f.vy / spd * f.minSpd;
+          }
+
+          f.x += f.vx;
+          f.y += f.vy;
+          f.tp += 0.12 + f.depth * 0.06;   // 가까울수록 꼬리 살짝 빠르게
+
+          // 동적 깊이 애니메이션 (위아래로 움직이는 효과)
+          f.depthPhase += f.depthSpd;
+          let d = f.baseDepth + Math.sin(f.depthPhase) * 0.35;
+          f.depth = Math.max(0, Math.min(1, d));
+
+          // 깊이에 따라 크기, 속도, 색상 실시간 업데이트
+          const szMul = 0.5 + f.depth * 0.5;
+          f.sz = f.baseSz * szMul;
+          const spdMul = 0.6 + f.depth * 0.4;
+          f.maxSpd = BASE_MAX * spdMul;
+          f.minSpd = BASE_MIN * spdMul;
+          f.color = fishColor(f.depth);
+        }
+      }
+
+      /* --- 물고기 그리기 (원뿔형) --- */
+      function drawFish(f) {
+        const ang = Math.atan2(f.vy, f.vx);
+        const s   = f.sz;
+
+        ctx.save();
+        ctx.translate(f.x, f.y);
+        ctx.rotate(ang);
+
+        ctx.beginPath();
+        ctx.moveTo(s * 0.7, 0);          // 머리 (앞쪽)
+        ctx.lineTo(-s * 0.3, -s * 0.35); // 꼬리 위 (길이를 대폭 줄이고 폭은 원래대로 복구)
+        ctx.lineTo(-s * 0.3,  s * 0.35); // 꼬리 아래
+        ctx.closePath();
+
+        ctx.fillStyle = f.color;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      /* --- 메인 루프 --- */
+      function loop() {
+        ctx.clearRect(0, 0, W, H);
+        update();
+        // 깊이가 실시간으로 변하므로 매 프레임 정렬 (먼 물고기 먼저 렌더링)
+        school.sort((a, b) => a.depth - b.depth);
+        for (const f of school) drawFish(f);
+        requestAnimationFrame(loop);
+      }
+
+      resize();
+      spawn();
+      window.addEventListener('resize', () => { resize(); spawn(); });
+      requestAnimationFrame(loop);
+    })();
   </script>
 </body>
 </html>

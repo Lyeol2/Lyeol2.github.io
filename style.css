@@ -4,12 +4,16 @@
   --sand: #FDBF5A;
   --black: #000000;
   --nav-height: 72px;
-  --frame-height: 220px;
+  --frame-size: 400px; /* 튜브(프레임) 사이즈 증가 */
   --wave-height: 100px;
   --bottom-panel-height: 100px;
 }
 
 /* Base */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 html,
 body {
   margin: 0;
@@ -82,12 +86,15 @@ body {
 }
 
 .main-stack {
+  position: relative;
   width: 100%;
   min-height: 100vh;
 }
 
 /* Navigation */
 .navigate {
+  position: relative;
+  z-index: 2;
   flex: 0 0 var(--nav-height);
   width: 100%;
   height: var(--nav-height);
@@ -113,6 +120,8 @@ body {
 
 /* Main panel */
 .main-panel {
+  position: relative;
+  z-index: 2;
   flex: 1 1 calc(100vh - var(--nav-height) - var(--wave-height) - var(--bottom-panel-height));
   width: 100%;
   min-height: calc(100vh - var(--nav-height) - var(--wave-height) - var(--bottom-panel-height));
@@ -120,23 +129,83 @@ body {
   gap: 0;
 }
 
+.title-container {
+  animation: floatTitle 6s ease-in-out infinite;
+}
+
+@keyframes floatTitle {
+  0%, 100% { transform: translateY(-6px) rotate(-1deg); }
+  50%      { transform: translateY(6px) rotate(1deg); }
+}
+
 .title-text {
   margin: 0;
-  color: var(--white);
-  font-size: 48px;
+  font-size: 56px;
+  font-weight: 900; /* 좀 더 볼드하게 */
+  letter-spacing: -0.5px;
+  
+  /* 빛반사(Shine) 물결 애니메이션 효과 */
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 1) 40%,
+    rgba(180, 225, 255, 0.8) 50%, /* 물빛 하이라이트 */
+    rgba(255, 255, 255, 1) 60%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shineText 5s linear infinite;
+  
+  /* 텍스트 섀도우를 필터로 주어 입체감 부여 */
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.15));
+}
+
+@keyframes shineText {
+  to { background-position: 200% center; }
+}
+
+.subtitle-text {
+  margin: 4px 0 0; /* 간격 줄임 */
+  color: var(--white); /* 완전한 흰색으로 변경 */
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: 1px;
 }
 
 .frame {
   position: relative;
   overflow: hidden;
-  height: var(--frame-height);
-  background: var(--white);
-
+  width: var(--frame-size);
+  height: var(--frame-size);
+  /* 가운데는 바다색, 바깥쪽 튜브는 6등분 스트라이프 */
+  background: 
+    radial-gradient(circle closest-side, var(--blue) 68%, transparent 69%),
+    conic-gradient(
+      from 30deg, 
+      #FE707E 0deg 60deg, 
+      #ffffff 60deg 120deg, 
+      #FE707E 120deg 180deg, 
+      #ffffff 180deg 240deg, 
+      #FE707E 240deg 300deg, 
+      #ffffff 300deg 360deg
+    );
+  border-radius: 50%; /* 완벽한 원형 튜브 */
+  box-shadow: 
+    inset 0 0 16px rgba(0, 0, 0, 0.1), /* 튜브의 안쪽 볼륨감 */
+    0 24px 48px rgba(0, 0, 0, 0.15), 
+    0 8px 16px rgba(0, 0, 0, 0.1);
+  border: 4px solid #FFFFFF;
+  backdrop-filter: blur(10px);
+  animation: floatTube 7s ease-in-out infinite; /* 더 자연스럽고 여유로운 타이밍 */
 }
 
-.frame-right-half {
-  flex: 0 0 50%;
-  width: 50%;
+/* 파도에 둥둥 떠다니는 자연스러운 모션 (타원형/8자 궤도 + 약간의 회전) */
+@keyframes floatTube {
+  0%, 100% { transform: translate(0px, -12px) rotate(-2deg); }
+  25%      { transform: translate(8px, 2px) rotate(1deg); }
+  50%      { transform: translate(0px, 14px) rotate(3deg); }
+  75%      { transform: translate(-8px, 2px) rotate(0deg); }
 }
 
 .slide-track {
@@ -151,38 +220,128 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 30px 34px 58px;
+  align-items: center; /* 원형에 맞게 가로 중앙 정렬 */
+  text-align: center; /* 텍스트 중앙 정렬 */
+  padding: 64px; /* 도넛 링(스트라이프) 영역을 침범하지 않도록 여백 대폭 증가 */
 }
 
 .slide-kicker {
-  margin: 0 0 8px;
-  color: var(--blue);
+  margin: 0 0 6px;
+  color: var(--sand);
   font-size: 13px;
   font-weight: 900;
 }
 
 .slide h2 {
   margin: 0;
-  color: #202020;
-  font-size: 36px;
+  color: var(--white);
+  font-size: 32px; /* 원형에 맞게 살짝 줄임 */
   line-height: 1;
 }
 
-.slide p:last-child {
+.slide-desc {
   margin: 14px 0 0;
-  color: #4f5a66;
-  font-size: 15px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
   line-height: 1.6;
+}
+
+/* Slide 01: Stat Box */
+.stat-box {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column; /* 세로로 배치하여 공간 절약 */
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-number {
+  font-size: 52px;
+  font-weight: 900;
+  color: var(--white);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+}
+
+/* Slide 02: Recent Posts */
+.recent-post-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.recent-post-list li {
+  display: flex;
+  flex-direction: column; /* 날짜를 밑으로 내려 가로 공간 확보 */
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.3);
+  padding-bottom: 6px;
+  gap: 2px;
+}
+
+.recent-post-list a {
+  color: var(--white);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+  white-space: nowrap; /* 글씨가 짧으므로 한줄 유지 */
+}
+
+.recent-post-list a:hover {
+  color: var(--sand);
+}
+
+.recent-post-list .date {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+}
+
+/* Slide 03: Social Links */
+.social-links {
+  margin-top: 18px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap; /* 혹시 넘치면 줄바꿈 */
+}
+
+.social-link {
+  display: inline-block;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--white);
+  text-decoration: none;
+  border-radius: 20px; /* 버튼도 알약 모양으로 변경 */
+  font-weight: 700;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.social-link:hover {
+  background: var(--white);
+  color: var(--blue);
+  transform: translateY(-2px);
 }
 
 .slide-controls {
   position: absolute;
-  left: 18px;
-  right: 18px;
-  bottom: 16px;
+  left: 0;
+  right: 0;
+  bottom: 40px; /* 도넛 링을 살짝 걸치거나 안쪽에 위치하도록 위로 올림 */
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center; /* 화살표 없이 중앙 정렬 */
   pointer-events: none;
 }
 
@@ -220,18 +379,19 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: rgba(0, 133, 251, 0.28);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .slide-dot.is-active {
   width: 22px;
   border-radius: 999px;
-  background: var(--blue);
+  background: var(--white);
 }
 
 /* Wave section */
 .wave-section {
   position: relative;
+  z-index: 2;
   flex: 0 0 var(--wave-height);
   width: 100%;
   height: var(--wave-height);
@@ -244,9 +404,21 @@ body {
   height: 100%;
 }
 
+/* Fish (Boids) overlay */
+#fish-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
 /* Bottom panel */
 .bottom-panel {
   position: relative;
+  z-index: 2;
   overflow: hidden;
   flex: 0 0 var(--bottom-panel-height);
   min-height: var(--bottom-panel-height);

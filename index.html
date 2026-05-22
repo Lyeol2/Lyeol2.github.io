@@ -3,7 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blog</title>
+  <title>JJIJIM'S BLOG</title>
+  
+  <!-- Open Graph / Link Preview Meta Tags -->
+  <meta property="og:title" content="JJIJIM'S BLOG">
+  <meta property="og:description" content="찌짐의 개발 블로그">
+  <meta property="og:image" content="https://lyeol2.github.io/og-image.png">
+  <meta property="og:url" content="https://lyeol2.github.io/">
+  <meta property="og:type" content="website">
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="JJIJIM'S BLOG">
+  <meta name="twitter:description" content="찌짐의 개발 블로그">
+  <meta name="twitter:image" content="https://lyeol2.github.io/og-image.png">
+
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -29,7 +43,7 @@
       <div class="main-panel div-horizontal fill-horizontal">
         <div class="title-container center div-vertical">
           <h1 class="title-text">JJIJIM'S BLOG</h1>
-          <p class="subtitle-text">devlog & blogging</p>
+          <p class="subtitle-text">찌짐의 개발 블로그</p>
         </div>
 
         <div class="right-half center">
@@ -596,7 +610,7 @@
 
       postArticle.hidden = false;
       postList.hidden = true;
-      if (postHeading) postHeading.textContent = post.display;
+      if (postHeading) postHeading.parentElement.hidden = true; // 메인 타이틀(전체 글) 숨김
       if (postSearch) postSearch.hidden = true;
       document.querySelector(".post-sort")?.setAttribute("hidden", "");
 
@@ -606,6 +620,7 @@
           ${renderPostNav(post, "post-detail-nav-top")}
         </div>
         <header class="post-article-header">
+          <h1 class="post-detail-title">${escapeHtml(post.display)}</h1>
           <span class="post-category-label">${escapeHtml(post.category)}</span>
           <p>${escapeHtml(post.description || "")}</p>
           <div class="post-info-row">
@@ -641,7 +656,10 @@
 
       postArticle.hidden = true;
       postList.hidden = false;
-      if (postHeading) postHeading.textContent = "전체 글";
+      if (postHeading) {
+        postHeading.parentElement.hidden = false;
+        postHeading.textContent = "전체 글";
+      }
       if (postSearch) postSearch.hidden = false;
       document.querySelector(".post-sort")?.removeAttribute("hidden");
     }

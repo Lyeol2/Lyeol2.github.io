@@ -5,7 +5,7 @@ window.BLOG_POSTS = [
     "display": "Boids",
     "description": "",
     "recent": "2026-05-22",
-    "views": 3,
+    "views": 0,
     "tags": [
       "algorithm"
     ],
@@ -17,7 +17,7 @@ window.BLOG_POSTS = [
     "display": "블로그 개발 일지 #1",
     "description": "깃허브 페이지 사용 방법",
     "recent": "2026-05-22",
-    "views": 12,
+    "views": 0,
     "tags": [
       "devlog"
     ],
@@ -29,7 +29,7 @@ window.BLOG_POSTS = [
     "display": "블로그 개발 일지 #2",
     "description": "html 과 css 꾸미기",
     "recent": "2026-05-22",
-    "views": 8,
+    "views": 0,
     "tags": [
       "devlog"
     ],
@@ -51,7 +51,7 @@ window.BLOG_POSTS = [
     "display": "옵시디언 플러그인 추천",
     "description": "내가 쓰던 플러그인 모아 놓기",
     "recent": "2026-05-22",
-    "views": 5,
+    "views": 0,
     "tags": [],
     "image": "posts/_assets/옵시디언 플러그인 추천/옵시디언 플러그인 추천_image.png"
   }

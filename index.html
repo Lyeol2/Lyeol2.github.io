@@ -284,10 +284,27 @@
       if (recentPosts) {
         recentPosts.innerHTML = getRecentPosts(3).map((post) => `
           <li>
-            <a href="${escapeHtml(post.path)}">${escapeHtml(post.display)}</a>
+            <a href="#" data-recent-post-path="${escapeHtml(post.path)}">${escapeHtml(post.display)}</a>
             <span class="date">${escapeHtml(post.recent || "-")}</span>
           </li>
         `).join("");
+
+        recentPosts.querySelectorAll("[data-recent-post-path]").forEach(link => {
+          link.addEventListener("click", (e) => {
+            e.preventDefault();
+            const post = blogPosts.find(p => p.path === link.dataset.recentPostPath);
+            if (post) {
+              openPost(post);
+              const postSection = document.getElementById('post-section');
+              if (postSection) {
+                postSection.style.display = 'flex';
+                setTimeout(() => {
+                  postSection.scrollIntoView({ behavior: 'smooth' });
+                }, 10);
+              }
+            }
+          });
+        });
       }
     }
 
@@ -359,6 +376,7 @@
           activeCategory = button.dataset.category;
           renderCategories();
           renderPosts();
+          closePost(); // 카테고리 클릭 시 글 보기 화면을 닫고 목록으로 복귀
         });
       });
     }

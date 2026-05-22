@@ -1066,7 +1066,7 @@ body {
 
 .post-card-link {
   display: grid;
-  grid-template-columns: minmax(132px, 36%) minmax(0, 1fr);
+  grid-template-columns: 200px minmax(0, 1fr); /* 퍼센트(36%) 대신 고정 사이즈(200px)를 주어 너비가 넓어져도 카드 규격이 일정하도록 수정 */
   min-height: 142px;
   align-items: stretch;
   color: inherit;

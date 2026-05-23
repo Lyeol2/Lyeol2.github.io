@@ -1361,6 +1361,40 @@ body {
   border-radius: 4px;
 }
 
+.math-block {
+  margin: 22px 0;
+  padding: 18px 20px;
+  overflow-x: auto;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(0, 133, 251, 0.12);
+}
+
+.math-block .katex-display {
+  margin: 0;
+}
+
+.math-inline {
+  display: inline-flex;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.math-inline .katex {
+  white-space: normal;
+}
+
+.math-block-fallback,
+.math-inline-fallback {
+  font-family: Consolas, Monaco, monospace;
+  color: #005ea8;
+}
+
+.math-block-fallback {
+  display: block;
+  white-space: pre;
+}
+
 /* Obsidian Link Cards */
 .obs-cardlink.glass-panel {
   display: flex;

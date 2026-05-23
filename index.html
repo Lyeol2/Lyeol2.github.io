@@ -17,8 +17,9 @@
   <meta name="twitter:title" content="JJIJIM'S BLOG">
   <meta name="twitter:description" content="찌짐의 개발 블로그">
   <meta name="twitter:image" content="https://lyeol2.github.io/og-image.png">
-
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <link rel="stylesheet" href="style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 </head>
 <body>
   <main class="main-desktop">
@@ -528,8 +529,53 @@
         }
       }
 
+      function renderMath(tex, displayMode = false) {
+        const source = String(tex || "").trim();
+
+        if (!source) return "";
+
+        if (window.katex) {
+          try {
+            const rendered = window.katex.renderToString(source, {
+              displayMode,
+              throwOnError: false,
+              strict: "ignore",
+              trust: false
+            });
+            return displayMode ? rendered : `<span class="math-inline">${rendered}</span>`;
+          } catch (error) {
+            console.warn("Math render failed:", error);
+          }
+        }
+
+        const tag = displayMode ? "div" : "span";
+        const className = displayMode ? "math-block-fallback" : "math-inline-fallback";
+        return `<${tag} class="${className}">${escapeHtml(source)}</${tag}>`;
+      }
+
+      function renderMathBlock(tex) {
+        return `<div class="math-block">${renderMath(tex, true)}</div>`;
+      }
+
       function parseInline(text) {
-        let res = text;
+        const tokens = [];
+        const token = (htmlValue) => {
+          const key = `\u0000${tokens.length}\u0000`;
+          tokens.push(htmlValue);
+          return key;
+        };
+
+        let res = String(text || "");
+        res = res.replace(/`([^`]+)`/g, (match, code) => token(`<code class="obs-inline-code">${escapeHtml(code)}</code>`));
+        res = res.replace(/\\\(([\s\S]+?)\\\)/g, (match, tex) => token(renderMath(tex, false)));
+        res = res.replace(/(^|[^\\])\$([^$\n]+?)\$/g, (match, prefix, tex) => `${prefix}${token(renderMath(tex, false))}`);
+        res = res.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (match, p1, p2) => {
+          const displayText = p2 || p1;
+          const postName = escapeHtml(p1).replace(/'/g, "\\'");
+          return token(`<a href="#" class="obs-internal-link" onclick="openPostByName('${postName}'); return false;">${escapeHtml(displayText)}</a>`);
+        });
+
+        res = escapeHtml(res);
         // Obsidian Highlight ==text==
         res = res.replace(/==([^=]+)==/g, '<mark class="obs-highlight">$1</mark>');
         // Bold **text**
@@ -538,14 +584,10 @@
         res = res.replace(/\*([^*]+)\*/g, '<em>$1</em>');
         // Strikethrough ~~text~~
         res = res.replace(/~~([^~]+)~~/g, '<del>$1</del>');
-        // Inline code `text`
-        res = res.replace(/`([^`]+)`/g, '<code class="obs-inline-code">$1</code>');
         // Standard Link [Text](URL)
         res = res.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="obs-ext-link">$1</a>');
-        // Obsidian Internal Link [[Page Name]] or [[Page Name|Display Text]]
-        res = res.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (match, p1, p2) => {
-          const displayText = p2 || p1;
-          return `<a href="#" class="obs-internal-link" onclick="openPostByName('${escapeHtml(p1).replace(/'/g, "\\'")}'); return false;">${escapeHtml(displayText)}</a>`;
+        tokens.forEach((htmlValue, index) => {
+          res = res.replaceAll(`\u0000${index}\u0000`, htmlValue);
         });
         return res;
       }
@@ -596,9 +638,71 @@
         const heading = trimmed.match(/^(#{1,4})\s+(.+)$/);
         const listItem = trimmed.match(/^[-*]\s+(.+)$/);
         const quote = trimmed.match(/^>\s*(.+)$/);
+        const mathDollar = trimmed.match(/^\$\$\s*([\s\S]*?)\s*\$\$$/);
+        const mathBracket = trimmed.match(/^\\\[\s*([\s\S]*?)\s*\\\]$/);
 
         if (!trimmed) {
           closeList();
+          continue;
+        }
+
+        if (trimmed === "$$" || trimmed.startsWith("$$")) {
+          closeList();
+
+          if (mathDollar) {
+            html += renderMathBlock(mathDollar[1]);
+            continue;
+          }
+
+          const mathLines = [];
+          const firstLine = trimmed.replace(/^\$\$\s*/, "");
+          if (firstLine) mathLines.push(firstLine);
+
+          while (i + 1 < lines.length) {
+            i += 1;
+            const mathLine = lines[i];
+            const endIndex = mathLine.indexOf("$$");
+
+            if (endIndex !== -1) {
+              const beforeEnd = mathLine.slice(0, endIndex);
+              if (beforeEnd.trim()) mathLines.push(beforeEnd);
+              break;
+            }
+
+            mathLines.push(mathLine);
+          }
+
+          html += renderMathBlock(mathLines.join("\n"));
+          continue;
+        }
+
+        if (trimmed === "\\[" || trimmed.startsWith("\\[")) {
+          closeList();
+
+          if (mathBracket) {
+            html += renderMathBlock(mathBracket[1]);
+            continue;
+          }
+
+          const mathLines = [];
+          const firstLine = trimmed.replace(/^\\\[\s*/, "");
+          if (firstLine) mathLines.push(firstLine);
+
+          while (i + 1 < lines.length) {
+            i += 1;
+            const mathLine = lines[i];
+            const endIndex = mathLine.indexOf("\\]");
+
+            if (endIndex !== -1) {
+              const beforeEnd = mathLine.slice(0, endIndex);
+              if (beforeEnd.trim()) mathLines.push(beforeEnd);
+              break;
+            }
+
+            mathLines.push(mathLine);
+          }
+
+          html += renderMathBlock(mathLines.join("\n"));
           continue;
         }
 

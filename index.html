@@ -77,10 +77,12 @@
               <p class="slide-kicker">04</p>
               <h2>GitHub Grass</h2>
               <a class="github-grass-link" href="https://github.com/Lyeol2" target="_blank" aria-label="GitHub contribution graph">
-                <img class="github-grass-image" src="https://ghchart.rshah.org/FE707E/Lyeol2" alt="Lyeol2 GitHub contribution graph" loading="lazy" data-github-grass-image>
-                <div class="github-grass-fallback" data-github-grass-fallback hidden></div>
+                <div class="github-grass-viewport">
+                  <img class="github-grass-image" src="https://ghchart.rshah.org/FE707E/Lyeol2" alt="Lyeol2 GitHub contribution graph" loading="lazy" data-github-grass-image>
+                  <div class="github-grass-month" data-github-grass-fallback hidden aria-hidden="true"></div>
+                </div>
               </a>
-              <p class="github-grass-caption">@Lyeol2</p>
+              <p class="github-grass-caption">last 30 days / @Lyeol2</p>
             </section>
           </div>
 
@@ -350,9 +352,10 @@
 
       if (!image || !fallback || fallback.dataset.rendered === "true") return;
 
-      fallback.innerHTML = Array.from({ length: 56 }, (_, index) => {
-        const level = (index * 7 + Math.floor(index / 3)) % 5;
-        return `<span class="grass-cell level-${level}" aria-hidden="true"></span>`;
+      fallback.innerHTML = Array.from({ length: 35 }, (_, index) => {
+        const day = 34 - index;
+        const level = day < 30 ? (index * 5 + Math.floor(index / 2)) % 5 : 0;
+        return `<span class="grass-cell level-${level}"></span>`;
       }).join("");
       fallback.dataset.rendered = "true";
 

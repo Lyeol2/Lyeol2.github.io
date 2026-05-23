@@ -481,18 +481,20 @@ body {
 
 /* Slide 04: GitHub grass */
 .github-slide {
-  gap: 10px;
+  justify-content: center;
+  gap: 8px;
+  padding-bottom: 46px;
 }
 
 .github-grass-link {
   display: grid;
   place-items: center;
-  width: min(270px, 78%);
-  min-height: 118px;
-  margin-top: 8px;
-  padding: 14px;
+  width: min(220px, 70%);
+  min-height: 128px;
+  margin: 8px auto 0;
+  padding: 18px;
   overflow: hidden;
-  border-radius: 22px;
+  border-radius: 18px;
   background: rgba(255, 255, 255, 0.16);
   border: 1px solid rgba(255, 255, 255, 0.26);
   text-decoration: none;
@@ -504,34 +506,49 @@ body {
   background: rgba(255, 255, 255, 0.24);
 }
 
+.github-grass-viewport {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 164px;
+  height: 104px;
+  overflow: hidden;
+}
+
 .github-grass-image {
-  width: 360px;
+  display: block;
+  width: 620px;
   max-width: none;
   height: auto;
-  transform: scale(1.22);
+  transform: translateX(-228px) scale(1.08);
   transform-origin: center;
-  filter: saturate(1.08) contrast(1.04);
+  filter: saturate(1.06) contrast(1.02);
 }
 
 .github-grass-image[hidden] {
   display: none;
 }
 
-.github-grass-fallback {
+.github-grass-month {
   display: grid;
-  grid-template-columns: repeat(14, 1fr);
-  gap: 4px;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, 1fr);
+  gap: 5px;
   width: 100%;
+  max-width: 166px;
+  margin: 0 auto;
 }
 
-.github-grass-fallback[hidden] {
+.github-grass-month[hidden] {
   display: none;
 }
 
 .grass-cell {
+  width: 16px;
   aspect-ratio: 1;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.24);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .grass-cell.level-1 { background: rgba(255, 255, 255, 0.4); }
@@ -542,7 +559,7 @@ body {
 .github-grass-caption {
   margin: 0;
   color: rgba(255, 255, 255, 0.82);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.5px;
 }

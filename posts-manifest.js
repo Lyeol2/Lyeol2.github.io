@@ -1,5 +1,39 @@
 window.BLOG_POSTS = [
   {
+    "path": "posts/Algorithm/BPE (Byte Pair Encoding).md",
+    "category": "Algorithm",
+    "display": "BPE (Byte Pair Encoding)",
+    "description": "",
+    "recent": "2026-05-23",
+    "views": 0,
+    "tags": [],
+    "image": ""
+  },
+  {
+    "path": "posts/Project/AI Project/AI Project - 1.md",
+    "category": "Project / AI Project",
+    "display": "AI 연구 일지 - 1",
+    "description": "Tokenizer에 대한 고민",
+    "recent": "2026-05-23",
+    "views": 0,
+    "tags": [
+      "devlog"
+    ],
+    "image": ""
+  },
+  {
+    "path": "posts/Project/AI Project/AI Project - 2.md",
+    "category": "Project / AI Project",
+    "display": "AI 연구 일지 - 2",
+    "description": "간단한 AI 모델 개발",
+    "recent": "2026-05-23",
+    "views": 0,
+    "tags": [
+      "devlog"
+    ],
+    "image": "posts/_assets/AI Project - 2/AI Project - 2_image-1.png"
+  },
+  {
     "path": "posts/Algorithm/Boids.md",
     "category": "Algorithm",
     "display": "Boids",
@@ -42,7 +76,9 @@ window.BLOG_POSTS = [
     "description": "post 기능 만들기",
     "recent": "2026-05-22",
     "views": 0,
-    "tags": [],
+    "tags": [
+      "devlog"
+    ],
     "image": "posts/_assets/Github Blog Dev - 3/Github Blog Dev - 3.gif.gif"
   },
   {

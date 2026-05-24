@@ -1,5 +1,25 @@
 window.BLOG_POSTS = [
   {
+    "path": "posts/Algorithm/FFN (Feed Forward Network).md",
+    "category": "Algorithm",
+    "display": "FFN (Feed Forward Network)",
+    "description": "",
+    "recent": "2026-05-24",
+    "views": 0,
+    "tags": [],
+    "image": ""
+  },
+  {
+    "path": "posts/Project/AI Project/AI Project - 3.md",
+    "category": "Project / AI Project",
+    "display": "AI Project - 3",
+    "description": "",
+    "recent": "2026-05-24",
+    "views": 0,
+    "tags": [],
+    "image": ""
+  },
+  {
     "path": "posts/Algorithm/BPE (Byte Pair Encoding).md",
     "category": "Algorithm",
     "display": "BPE (Byte Pair Encoding)",

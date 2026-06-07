@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { execSync } = require("child_process");
 
 const rootDir = path.resolve(__dirname, "..");
 const postsDir = path.join(rootDir, "posts");
@@ -9,6 +10,25 @@ const excludedDirs = new Set(["_assets", "Templates", "private"]);
 
 function toPosix(filePath) {
   return filePath.split(path.sep).join("/");
+}
+
+function readTrackedPathMap() {
+  try {
+    const output = execSync("git ls-files -z posts", {
+      cwd: rootDir,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"]
+    });
+
+    return new Map(
+      output
+        .split("\0")
+        .filter(Boolean)
+        .map((trackedPath) => [trackedPath.toLowerCase(), trackedPath])
+    );
+  } catch (error) {
+    return new Map();
+  }
 }
 
 function walkMarkdownFiles(dir) {
@@ -84,10 +104,11 @@ function readExistingViews() {
   return views;
 }
 
-function buildPost(filePath, existingViews) {
+function buildPost(filePath, existingViews, trackedPathMap) {
   const markdown = fs.readFileSync(filePath, "utf8");
   const relativePath = toPosix(path.relative(rootDir, filePath));
-  const pathParts = relativePath.split("/");
+  const canonicalPath = trackedPathMap.get(relativePath.toLowerCase()) || relativePath;
+  const pathParts = canonicalPath.split("/");
   const filename = path.basename(filePath, ".md");
   const category = pathParts.slice(1, -1).join(" / ");
   const frontmatter = parseFrontmatter(markdown);
@@ -95,12 +116,12 @@ function buildPost(filePath, existingViews) {
   const image = imageName ? `posts/_assets/${filename}/${imageName}` : "";
 
   return {
-    path: relativePath,
+    path: canonicalPath,
     category,
     display: frontmatter.display || filename,
     description: frontmatter.description || "",
     recent: frontmatter.recent || frontmatter.create || "",
-    views: existingViews.get(relativePath) || 0,
+    views: existingViews.get(canonicalPath) || 0,
     tags: frontmatter.tags || [],
     image
   };
@@ -111,8 +132,9 @@ function formatManifest(posts) {
 }
 
 const existingViews = readExistingViews();
+const trackedPathMap = readTrackedPathMap();
 const posts = walkMarkdownFiles(postsDir)
-  .map((filePath) => buildPost(filePath, existingViews))
+  .map((filePath) => buildPost(filePath, existingViews, trackedPathMap))
   .sort((a, b) => {
     const dateCompare = String(b.recent || "").localeCompare(String(a.recent || ""));
     return dateCompare || a.path.localeCompare(b.path);

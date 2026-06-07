@@ -638,6 +638,7 @@
         }
 
         const image = trimmed.match(/^!\[\[([^\]|]+)(?:\|[^\]]*)?\]\]$/);
+        const markdownImage = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
         const heading = trimmed.match(/^(#{1,4})\s+(.+)$/);
         const listItem = trimmed.match(/^[-*]\s+(.+)$/);
         const quote = trimmed.match(/^>\s*(.+)$/);
@@ -716,6 +717,12 @@
             imgSrc = getPostAssetPath(post, imgSrc);
           }
           html += `<img class="markdown-image" src="${escapeHtml(imgSrc)}" alt="">`;
+          continue;
+        }
+
+        if (markdownImage) {
+          closeList();
+          html += `<img class="markdown-image" src="${escapeHtml(markdownImage[2])}" alt="${escapeHtml(markdownImage[1] || "")}" loading="lazy">`;
           continue;
         }
 

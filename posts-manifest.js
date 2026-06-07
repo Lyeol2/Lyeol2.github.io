@@ -1,5 +1,17 @@
 window.BLOG_POSTS = [
   {
+    "path": "posts/Blog/vlog/올림픽공원시위 후기.md",
+    "category": "Blog / vlog",
+    "display": "올림픽공원시위 후기",
+    "description": "올림픽공원 시위 참여 후기",
+    "recent": "2026-06-07",
+    "views": 0,
+    "tags": [
+      "vlog"
+    ],
+    "image": ""
+  },
+  {
     "path": "posts/Project/AI Project/AI Project - 5.md",
     "category": "Project / AI Project",
     "display": "AI Project - 5",
@@ -212,26 +224,6 @@ window.BLOG_POSTS = [
     "image": "posts/_assets/옵시디언 플러그인 추천/옵시디언 플러그인 추천_image.png"
   },
   {
-    "path": "posts/Algorithm/무제.md",
-    "category": "Algorithm",
-    "display": "무제",
-    "description": "",
-    "recent": "",
-    "views": 0,
-    "tags": [],
-    "image": ""
-  },
-  {
-    "path": "posts/Blog/vlog/올림픽공원시위 후기.md",
-    "category": "Blog / vlog",
-    "display": "올림픽공원시위 후기",
-    "description": "",
-    "recent": "",
-    "views": 0,
-    "tags": [],
-    "image": ""
-  },
-  {
     "path": "posts/개발 메모.md",
     "category": "",
     "display": "개발 메모",
@@ -251,6 +243,16 @@ window.BLOG_POSTS = [
     "tags": [
       "[excalidraw]"
     ],
+    "image": ""
+  },
+  {
+    "path": "posts/Algorithm/무제.md",
+    "category": "Algorithm",
+    "display": "무제",
+    "description": "",
+    "recent": "",
+    "views": 0,
+    "tags": [],
     "image": ""
   }
 ];

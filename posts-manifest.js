@@ -222,6 +222,16 @@ window.BLOG_POSTS = [
     "image": ""
   },
   {
+    "path": "posts/Blog/일기/올림픽공원시위 후기.md",
+    "category": "Blog / 일기",
+    "display": "올림픽공원시위 후기",
+    "description": "",
+    "recent": "",
+    "views": 0,
+    "tags": [],
+    "image": ""
+  },
+  {
     "path": "posts/개발 메모.md",
     "category": "",
     "display": "개발 메모",

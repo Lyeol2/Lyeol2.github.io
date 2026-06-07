@@ -1,5 +1,105 @@
 window.BLOG_POSTS = [
   {
+    "path": "posts/Project/AI Project/AI Project - 5.md",
+    "category": "Project / AI Project",
+    "display": "AI Project - 5",
+    "description": "",
+    "recent": "2026-06-04",
+    "views": 0,
+    "tags": [],
+    "image": ""
+  },
+  {
+    "path": "posts/Project/AI Project/엔트로피 학습.md",
+    "category": "Project / AI Project",
+    "display": "엔트로피 학습",
+    "description": "",
+    "recent": "2026-06-03",
+    "views": 0,
+    "tags": [],
+    "image": ""
+  },
+  {
+    "path": "posts/Algorithm/Multi-Head Attention.md",
+    "category": "Algorithm",
+    "display": "Multi-Head Attention",
+    "description": "",
+    "recent": "2026-06-01",
+    "views": 0,
+    "tags": [],
+    "image": ""
+  },
+  {
+    "path": "posts/Algorithm/Positional Encoding.md",
+    "category": "Algorithm",
+    "display": "Position Embedding",
+    "description": "",
+    "recent": "2026-06-01",
+    "views": 0,
+    "tags": [],
+    "image": ""
+  },
+  {
+    "path": "posts/Project/AI Project/AI Project - 4.md",
+    "category": "Project / AI Project",
+    "display": "AI 연구일지 - 4",
+    "description": "임베딩행렬과 어텐션",
+    "recent": "2026-06-01",
+    "views": 0,
+    "tags": [],
+    "image": "posts/_assets/AI Project - 4/AI Project - 4_image-1.png"
+  },
+  {
+    "path": "posts/Project/Goal Project/Project Goal.md",
+    "category": "Project / Goal Project",
+    "display": "Project Goal 개발",
+    "description": "codex 에서 /goal 명령어 하나로 게임만들기",
+    "recent": "2026-05-30",
+    "views": 0,
+    "tags": [],
+    "image": ""
+  },
+  {
+    "path": "posts/Project/Project_144MB.md",
+    "category": "Project",
+    "display": "Project_144MB",
+    "description": "",
+    "recent": "2026-05-25",
+    "views": 0,
+    "tags": [],
+    "image": ""
+  },
+  {
+    "path": "posts/Tool/CMake 사용법.md",
+    "category": "Tool",
+    "display": "CMake 사용법",
+    "description": "",
+    "recent": "2026-05-25",
+    "views": 0,
+    "tags": [],
+    "image": ""
+  },
+  {
+    "path": "posts/Tool/Git/Git 커밋 메시지 규칙.md",
+    "category": "Tool / Git",
+    "display": "Git 커밋 메시지 규칙",
+    "description": "내가 쓰기위해서 작성하는 문서",
+    "recent": "2026-05-25",
+    "views": 0,
+    "tags": [],
+    "image": ""
+  },
+  {
+    "path": "posts/Tool/MkDocs 사용법.md",
+    "category": "Tool",
+    "display": "MkDocs 사용법",
+    "description": "Python 개발 문서 정리를 해보자",
+    "recent": "2026-05-25",
+    "views": 0,
+    "tags": [],
+    "image": "posts/_assets/MkDocs 사용법/MkDocs 사용법_image-1.png"
+  },
+  {
     "path": "posts/Algorithm/FFN (Feed Forward Network).md",
     "category": "Algorithm",
     "display": "FFN (Feed Forward Network)",
@@ -12,12 +112,12 @@ window.BLOG_POSTS = [
   {
     "path": "posts/Project/AI Project/AI Project - 3.md",
     "category": "Project / AI Project",
-    "display": "AI Project - 3",
-    "description": "",
+    "display": "AI 연구일지 - 3",
+    "description": "명령 프롬포트 환경으로 변경",
     "recent": "2026-05-24",
     "views": 0,
     "tags": [],
-    "image": ""
+    "image": "posts/_assets/AI Project - 3/AI Project - 3_image-0.png"
   },
   {
     "path": "posts/Algorithm/BPE (Byte Pair Encoding).md",
@@ -110,5 +210,37 @@ window.BLOG_POSTS = [
     "views": 0,
     "tags": [],
     "image": "posts/_assets/옵시디언 플러그인 추천/옵시디언 플러그인 추천_image.png"
+  },
+  {
+    "path": "posts/Algorithm/무제.md",
+    "category": "Algorithm",
+    "display": "무제",
+    "description": "",
+    "recent": "",
+    "views": 0,
+    "tags": [],
+    "image": ""
+  },
+  {
+    "path": "posts/개발 메모.md",
+    "category": "",
+    "display": "개발 메모",
+    "description": "",
+    "recent": "",
+    "views": 0,
+    "tags": [],
+    "image": ""
+  },
+  {
+    "path": "posts/아키텍처 메모.excalidraw.md",
+    "category": "",
+    "display": "아키텍처 메모.excalidraw",
+    "description": "",
+    "recent": "",
+    "views": 0,
+    "tags": [
+      "[excalidraw]"
+    ],
+    "image": ""
   }
 ];

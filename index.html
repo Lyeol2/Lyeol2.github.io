@@ -560,6 +560,18 @@
         return `<div class="math-block">${renderMath(tex, true)}</div>`;
       }
 
+      function renderMarkdownImage(src, alt = "") {
+        const safeSrc = escapeHtml(src);
+        const safeAlt = escapeHtml(alt);
+
+        return `
+          <a class="markdown-image-link" href="${safeSrc}" target="_blank" rel="noopener noreferrer">
+            <img class="markdown-image" src="${safeSrc}" alt="${safeAlt}" loading="lazy" onerror="this.hidden=true; this.nextElementSibling.hidden=false;">
+            <span class="markdown-image-fallback" hidden>이미지 원본 열기</span>
+          </a>
+        `;
+      }
+
       function parseInline(text) {
         const tokens = [];
         const token = (htmlValue) => {
@@ -577,6 +589,14 @@
           const postName = escapeHtml(p1).replace(/'/g, "\\'");
           return token(`<a href="#" class="obs-internal-link" onclick="openPostByName('${postName}'); return false;">${escapeHtml(displayText)}</a>`);
         });
+        res = res.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, (match, label, url) => {
+          return token(`<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="obs-ext-link">${escapeHtml(label)}</a>`);
+        });
+        res = res.replace(/https?:\/\/[^\s<>()]+(?:\([^\s<>()]*\)[^\s<>()]*)?/g, (url) => {
+          const trailing = url.match(/[.,!?;:]+$/)?.[0] || "";
+          const cleanUrl = trailing ? url.slice(0, -trailing.length) : url;
+          return `${token(`<a href="${escapeHtml(cleanUrl)}" target="_blank" rel="noopener noreferrer" class="obs-ext-link">${escapeHtml(cleanUrl)}</a>`)}${trailing}`;
+        });
 
         res = escapeHtml(res);
         // Obsidian Highlight ==text==
@@ -587,8 +607,6 @@
         res = res.replace(/\*([^*]+)\*/g, '<em>$1</em>');
         // Strikethrough ~~text~~
         res = res.replace(/~~([^~]+)~~/g, '<del>$1</del>');
-        // Standard Link [Text](URL)
-        res = res.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="obs-ext-link">$1</a>');
         tokens.forEach((htmlValue, index) => {
           res = res.replaceAll(`\u0000${index}\u0000`, htmlValue);
         });
@@ -716,13 +734,13 @@
           if (!imgSrc.startsWith('http')) {
             imgSrc = getPostAssetPath(post, imgSrc);
           }
-          html += `<img class="markdown-image" src="${escapeHtml(imgSrc)}" alt="">`;
+          html += renderMarkdownImage(imgSrc);
           continue;
         }
 
         if (markdownImage) {
           closeList();
-          html += `<img class="markdown-image" src="${escapeHtml(markdownImage[2])}" alt="${escapeHtml(markdownImage[1] || "")}" loading="lazy">`;
+          html += renderMarkdownImage(markdownImage[2], markdownImage[1] || "");
           continue;
         }
 
